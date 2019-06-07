@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="回归博客一个多月，给自己最大的感受就是使用 GitHub Page 搭建的博客在国内没有梯子的情况下访问实在太慢了，在移动端的首屏加载有时甚至超过 10 秒钟，严重影响交互体验。刚好最近在学习 Service Worker，便决定以自己的博客作为小白鼠，实践离线访问、后台同步和 Preload &amp;amp; Prefetch 等渐进式单页应用的逆天功能吧~">
+<meta name="keywords" content="optimization,service worker,pwa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="博客大改造：Service Worker 实践与总结">
+<meta property="og:url" content="https://jacelyn.fish/2018/11/02/service-worker-in-practice/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="回归博客一个多月，给自己最大的感受就是使用 GitHub Page 搭建的博客在国内没有梯子的情况下访问实在太慢了，在移动端的首屏加载有时甚至超过 10 秒钟，严重影响交互体验。刚好最近在学习 Service Worker，便决定以自己的博客作为小白鼠，实践离线访问、后台同步和 Preload &amp;amp; Prefetch 等渐进式单页应用的逆天功能吧~">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/cache-falling-back-to-network.png">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/stale-while-revalidate.png">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/background_sync.gif">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/bg_sync_flowchart.png">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/preload.jpg">
+<meta property="og:image" content="https://jacelyn.fish/images/service-worker-in-practice/performance_score.png">
+<meta property="og:updated_time" content="2019-06-07T12:52:27.587Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="博客大改造：Service Worker 实践与总结">
+<meta name="twitter:description" content="回归博客一个多月，给自己最大的感受就是使用 GitHub Page 搭建的博客在国内没有梯子的情况下访问实在太慢了，在移动端的首屏加载有时甚至超过 10 秒钟，严重影响交互体验。刚好最近在学习 Service Worker，便决定以自己的博客作为小白鼠，实践离线访问、后台同步和 Preload &amp;amp; Prefetch 等渐进式单页应用的逆天功能吧~">
+<meta name="twitter:image" content="https://jacelyn.fish/images/service-worker-in-practice/cache-falling-back-to-network.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2018/11/02/service-worker-in-practice/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>博客大改造：Service Worker 实践与总结 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2018/11/02/service-worker-in-practice/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">博客大改造：Service Worker 实践与总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-11-02 17:09:17" itemprop="dateCreated datePublished" datetime="2018-11-02T17:09:17+08:00">2018-11-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-07 20:52:27" itemprop="dateModified" datetime="2019-06-07T20:52:27+08:00">2019-06-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>回归博客一个多月，给自己最大的感受就是使用 GitHub Page 搭建的博客在国内没有梯子的情况下访问实在太慢了，在移动端的首屏加载有时甚至超过 10 秒钟，严重影响交互体验。刚好最近在学习 Service Worker，便决定以自己的博客作为小白鼠，实践离线访问、后台同步和 Preload &amp; Prefetch 等渐进式单页应用的逆天功能吧~</p>
+<a id="more"></a>
+<h2 id="Service-Worker-缓存资源离线可用"><a href="#Service-Worker-缓存资源离线可用" class="headerlink" title="Service Worker 缓存资源离线可用"></a>Service Worker 缓存资源离线可用</h2><p>Service Worker 本质上是一种特殊的 JavaScript Worker，它脱离主页面在一个单独的线程里后台运行，因此无法直接访问 DOM，而是需要通过 postMessage 消息通知接口与主页面线程进行数据交互；但也因其独立运行的特性，即使用户在关闭页面甚至浏览器后，Service Worker 依然可以在后台默默运行直到所有工作结束。Service Worker 是 PWA 技术的核心，它驱动着离线缓存、消息推送和后台同步等功能的发展，大大弥补了传统网页应用相比原生应用的缺陷，提升交互体验。可以将 Service Worker 看作一种<strong>可编程的网络代理</strong>(programmable network proxy)，允许开发者“劫持”页面上所有的请求，并动态决定返回何种资源。</p>
+<p>那么我们是如何使用 Service Worker 使得站点的资源支持离线访问的呢？这主要得益于三个重要的生命周期中不同的资源缓存管理策略：</p>
+<ul>
+<li><strong><code>install</code></strong>：Service Worker 注册并安装完成后，请求页面关键资源并缓存；</li>
+<li><strong><code>activate</code></strong>：激活后删除过期缓存</li>
+<li><strong><code>fetch</code></strong>：页面受控后所有请求会被 Service Worker “劫持”，根据资源类型动态返回缓存数据或请求新数据</li>
+</ul>
+<blockquote>
+<p>网络上关于 Service Worker 及其生命周期的概念已经有很完整的介绍了，大家可以参考一下<a href="https://developers.google.com/web/fundamentals/primers/service-workers" target="_blank" rel="noopener">这篇教程</a>，因为本文主要是经验总结，概念介绍就不过多描述了。</p>
+</blockquote>
+<h3 id="install"><a href="#install" class="headerlink" title="install"></a>install</h3><p>在 Service Worker 注册并安装完成后，<code>install</code> 事件被触发。在这个回调处理里，我们定义了一系列对站点离线访问最关键的资源 URL 列表，它们通常也是关键请求链包含的文件，并将其缓存进 <code>caches</code> 中。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">self.addEventListener(<span class="string">'install'</span>, e =&gt; &#123;</span><br><span class="line">  e.waitUntil(</span><br><span class="line">    caches</span><br><span class="line">      .open(CACHE_NAME)</span><br><span class="line">      .then(<span class="function"><span class="params">cache</span> =&gt;</span></span><br><span class="line">        cache.addAll([</span><br><span class="line">          ...fileList.main,</span><br><span class="line">          ...fileList.vendor,</span><br><span class="line">          <span class="string">'/js/src/utils.js?v=6.4.2'</span>,</span><br><span class="line">          <span class="string">'/js/src/motion.js?v=6.4.2'</span>,</span><br><span class="line">          <span class="string">'/js/src/bootstrap.js?v=6.4.2'</span></span><br><span class="line">        ])</span><br><span class="line">      )</span><br><span class="line">      .then(self.skipWaiting())</span><br><span class="line">      .catch(<span class="function"><span class="params">err</span> =&gt;</span> <span class="built_in">console</span>.log(err))</span><br><span class="line">  );</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>这里需要注意的是，这个缓存过程是返回一个 <code>Promise</code> 对象，我们将其传入 <code>e.waitUntil()</code> 方法中，以便让 Service Worker 至少会运行到处理完成这个过程才关闭，以及安装过程是否成功。当任何一个文件无法下载，<code>Promise</code> 对象抛错，Service Worker 便会安装失败，浏览器会抛弃当前 Service Worker。</p>
+<p>每个 Service Worker 只会触发一次 <code>install</code> 事件，当 Service Worker 文件本身发生任何修改，浏览器都会认为它是新的 Worker 对象并重新触发安装。在安装的过程中，旧的 Service Worker 依然继续控制着当前页面，此时新 Worker 便会进入 <code>waiting</code> 状态，只有当页面关闭后旧 Worker 才会被清除，新 Service Worker 进入 <code>activate</code> 状态。然而在博客页面里我希望修改完的 Service Worker 文件立刻生效，于是可以使用 <code>self.skipWaiting()</code> 略过等待阶段，直接使旧 Worker 使用，激活新 Worker。</p>
+<h3 id="activate"><a href="#activate" class="headerlink" title="activate"></a>activate</h3><p><code>activate</code> 事件回调是一个管理老旧缓存的好地方，我们可以通过修改 <code>CACHE_NAME</code> 删除不需要的缓存。在一般 PWA 中，我们可以结合版本号和缓存名，及时删除过期缓存；但在本博客大多是静态资源，修改少，在接下来的开发中就一直使用相同的 <code>CACHE_NAME</code>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">self.addEventListener(<span class="string">'activate'</span>, e =&gt; &#123;</span><br><span class="line">  <span class="keyword">let</span> whiteList = [CACHE_NAME];</span><br><span class="line">  e.waitUntil(</span><br><span class="line">    (<span class="keyword">async</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">let</span> keys = <span class="keyword">await</span> caches.keys();</span><br><span class="line">      <span class="keyword">await</span> <span class="built_in">Promise</span>.all(</span><br><span class="line">        keys.map(<span class="function"><span class="params">name</span> =&gt;</span> &#123;</span><br><span class="line">          <span class="keyword">if</span> (whiteList.indexOf(name) === <span class="number">-1</span>) <span class="keyword">return</span> caches.delete(name);</span><br><span class="line">        &#125;)</span><br><span class="line">      );</span><br><span class="line">      <span class="keyword">await</span> self.clients.claim();</span><br><span class="line">      <span class="keyword">await</span> self.registration.navigationPreload.enable();</span><br><span class="line">    &#125;)()</span><br><span class="line">  );</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>然而一个 Service Worker 进入激活状态并不意味着注册它的页面就受控了。默认来说，出于一致性（consistency）考虑，如果一个页面本身的请求不是通过 Service Worker 加载的，它所发起的所有子资源请求也不会经过 Service Worker，如一个崭新的、没有 Service Worker 注册过的应用。使用 <code>clients.claim()</code> 可以重写这一默认行为，直接控制非受控的页面，而不用等待页面再次刷新。</p>
+<h3 id="fetch"><a href="#fetch" class="headerlink" title="fetch"></a>fetch</h3><p>当我们把 <code>fetch</code>事件看做网络代理的话，就需要对不同资源类型应用不同的请求/缓存策略。这里应用的策略主要分三个分支</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>资源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cache, falling back to network</td>
+<td>几乎无修改的静态资源，如字体、图片和第三方库</td>
+</tr>
+<tr>
+<td>stale-while-revalidating</td>
+<td>导航请求、常根据业务修改的样式和应用脚本</td>
+</tr>
+<tr>
+<td>正常 HTTP 请求</td>
+<td>第三方插件请求，如 codepen，discus，Google Analysis 等请求</td>
+</tr>
+</tbody>
+</table>
+<p>由于第三方插件是网站的增强功能，即使请求失败也对页面本身访问影响不大，我们在这里不需要对其作任何处理、拦截，最简单的方法就是不将其 <code>e.request</code> 传入任何 <code>fetch</code> 请求中。然而对于其他关键资源，对应策略的主要区别在于缓存/网络请求的优先级：</p>
+<h4 id="Cache-falling-back-to-network"><a href="#Cache-falling-back-to-network" class="headerlink" title="Cache, falling back to network"></a>Cache, falling back to network</h4><p><img src="/images/service-worker-in-practice/cache-falling-back-to-network.png" alt="Cache, falling back to network" style="width: 80%"></p>
+<p>对于几乎无修改的静态资源，如字体、图片和第三方库，优先使用缓存，在无对应资源时再进行请求能有效地节省带宽资源，提高页面加载速度。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">e.respondWith(</span><br><span class="line">  caches.match(e.request).then(<span class="function"><span class="keyword">function</span>(<span class="params">_res</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (</span><br><span class="line">      _res || <span class="comment">// 缓存无命中，再次发起网络请求</span></span><br><span class="line">      fetched.then(<span class="function"><span class="params">fetchRes</span> =&gt;</span> &#123;</span><br><span class="line">        e.waitUntil(saveCache(e.request, fetchRes.clone()));</span><br><span class="line">        <span class="keyword">return</span> fetchRes;</span><br><span class="line">      &#125;)</span><br><span class="line">    );</span><br><span class="line">  &#125;)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<h4 id="Stale-while-revalidating"><a href="#Stale-while-revalidating" class="headerlink" title="Stale-while-revalidating"></a>Stale-while-revalidating</h4><p><img src="/images/service-worker-in-practice/stale-while-revalidate.png" style="width: 80%"></p>
+<p>对于博客应用的关键请求资源，如导航请求、离线页面、CSS 和 JS，一昧使用缓存中的旧资源是不可取的（因为 Po 主本人会经常发癫这里那里改改样式嘻嘻(´･ω･<code>)，因此在 Stale-while-revalidating 策略里，我们使用</code>fetch<code>请求与缓存竞争，通过对比缓存和请求的</code>last-modified` 响应字段，一旦发现最新资源则需要更新缓存。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">e.respondWith(</span><br><span class="line">  <span class="built_in">Promise</span>.race([fetched.catch(<span class="function"><span class="params">_</span> =&gt;</span> cached), useCached])</span><br><span class="line">    .then(<span class="function"><span class="params">_res</span> =&gt;</span> _res || fetched)</span><br><span class="line">    .catch(<span class="function"><span class="params">_</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (isNavigate) <span class="keyword">return</span> caches.match(<span class="string">'/offline/'</span>);</span><br><span class="line">    &#125;)</span><br><span class="line">);</span><br><span class="line"><span class="comment">// 判断最后修改时间，资源若有更新则替换缓存</span></span><br><span class="line">e.waitUntil(</span><br><span class="line">  <span class="built_in">Promise</span>.all([fetchedCopy, caches.match(e.request)])</span><br><span class="line">    .then(<span class="function">(<span class="params">[_resp, _cresp]</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">let</span> fModified = _resp.headers.get(<span class="string">'last-modified'</span>);</span><br><span class="line">      <span class="keyword">let</span> cModified = _cresp &amp;&amp; _cresp.headers.get(<span class="string">'last-modified'</span>);</span><br><span class="line">      <span class="keyword">if</span> (isNavigate || !fModified || fModified != cModified)</span><br><span class="line">        <span class="keyword">return</span> saveCache(e.request, _resp);</span><br><span class="line">    &#125;)</span><br><span class="line">    .catch(<span class="function"><span class="params">_</span> =&gt;</span> &#123;&#125;)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>由于在博客应用中，静态资源占比较大而更追求加载速度，也不存在表单交互、XHR 请求等功能，因此使用的请求策略对缓存依赖还是比较大。但在普通单页应用中，应该更倾向于网络优先的方法，以防止用户无法及时获取最新数据。<a href="https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook" target="_blank" rel="noopener">Google Developer 上的这篇文档</a> 更详细地介绍了请求策略的一些最佳实践。</p>
+<h2 id="Navigation-Preload"><a href="#Navigation-Preload" class="headerlink" title="Navigation Preload"></a>Navigation Preload</h2><p>在跳转到一个使用 Service Worker 处理 fetch 请求的页面时，如果该 Service Worker 没有在运行，则浏览器需要启动该 Worker，然而这会导致 navigation request 有一定的延迟无法立即执行，我们可以使用 Navigation Preload 机制来使浏览器并行处理 Service Worker 的启动和跳转请求。</p>
+<p><div style="width: 60%; min-width: 300px; display: flex; line-height: 2; margin: 0 auto;"><span style="color:white; background-color: #fcc255; padding: 0 6px; white-space: pre">SW bootup</span><span style="width: 100%; background-color: #57a2e4; color: white; padding: 0 6px;">Navigation Request</span></div><span style="width: 100%; text-align: center;display: inline-block; font-size: 12px; color: rgba(0,0,0,0.5); text-align: center; margin: 0; line-height: 2">Service Worker 启动阻塞请求的发送</span></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">self.addEventListener(<span class="string">'activate'</span>, e =&gt; &#123;</span><br><span class="line">  e.waitUntil(</span><br><span class="line">    (<span class="keyword">async</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">await</span> self.registration.navigationPreload.enable();</span><br><span class="line">    &#125;)()</span><br><span class="line">  );</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>如果需要在 <code>fetch</code> 事件里使用 preload 的结果，则在 <code>activate</code> 事件里开启功能一般是 Navigation Preload 的最佳实践。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">self.addEventListener(<span class="string">'fetch'</span>, e =&gt; &#123;</span><br><span class="line">  <span class="keyword">let</span> isNavigate =</span><br><span class="line">    e.request.mode == <span class="string">'navigate'</span> || e.request.destination == <span class="string">'document'</span>;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">let</span> fetched =</span><br><span class="line">    isLocal &amp;&amp; isNavigate</span><br><span class="line">      ? e.preloadResponse.catch(<span class="function"><span class="params">_</span> =&gt;</span> fetchClone)</span><br><span class="line">      : fetchClone;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p><div style="width: 60%; min-width: 300px; display: flex; flex-direction: column; line-height: 2; margin: 0 auto;"><span style="width: fit-content; color:white; background-color: #fcc255; padding: 0 6px; white-space: pre">SW bootup</span><span style="background-color: #57a2e4; color: white; padding: 0 6px;">Navigation Request</span></div><span style="width: 100%; text-align: center;display: inline-block; font-size: 12px; color: rgba(0,0,0,0.5); text-align: center; margin: 0; line-height: 2">使用 Navigation Preload 后，Service Worker 和请求并行进行</span></p>
+<p><code>e.preloadResponse</code> 是一个 <code>Promise</code> 对象，当满足以下三个条件时便会 <code>resolve</code> 返回已请求好的资源：<strong>1)</strong> Navigation Preload 已开启，<strong>2)</strong> 请求方法是 ‘GET’ 和 <strong>3)</strong> 该请求是由浏览器在加载页面时的<em>导航请求</em>(navigation request)，包括页面刷新、跳转和 <code>iframes</code> 里的页面请求；否则则会 <code>resolve</code> 为 <code>undefined</code>。需要注意的是，如果开启了 Navigation Preload 就请务必使用 <code>e.preloadResponse</code> 所返回的资源，否则使用 <code>fetch(e.request)</code> 再次加载则会造成双重请求，浪费带宽资源。</p>
+<p>在实现过程中，首先检查请求对象的 <code>mode</code> 的值是否 <code>navigate</code> 确认使用 <code>e.preloadResponse</code> 或是正常的 <code>fetch</code> 请求，一旦 preload 抛错则使用 <code>fetch</code> 请求作为后备响应。因此如上一节，Navigation Preload  请求也是会跟缓存资源竞争比对，然而缓存的获取往往都会比请求返回效率更高，这就很容易造成即使导航页面有更新，而用户再次访问时 Service Worker 却直接从缓存中返回旧数据，导致实际页面与服务端<strong>本想</strong>提供的资源不一致。这明显是不可取的做法，现代 SPA 中导航请求页面往往是更多核心资源的入口，旧版本的页面意味着浏览器无法请求带有最新版本号的样式或脚本文件，我们需要对 Navigation Preload 请求作绕过缓存的处理：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// in fetch handler</span></span><br><span class="line"><span class="keyword">let</span> useCached = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (isNavigate)</span><br><span class="line">    <span class="comment">//【Navigation Mode】请求与超时竞争</span></span><br><span class="line">    setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      reject(); <span class="comment">// 设置导航请求超时时间</span></span><br><span class="line">    &#125;, <span class="number">5000</span>);</span><br><span class="line">  <span class="keyword">else</span> resolve(cached); <span class="comment">// 【Regular Request】请求与缓存竞争</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">e.respondWith(</span><br><span class="line">  <span class="comment">// 在 Navigate 模式下，在请求超时前（网络不顺畅）没有返回请求或缓存资源</span></span><br><span class="line">  <span class="comment">// 抛出错误，直接渲染 offline 页面</span></span><br><span class="line">  <span class="built_in">Promise</span>.race([fetched.catch(<span class="function"><span class="params">_</span> =&gt;</span> cached), useCached])</span><br><span class="line">    .then(<span class="function"><span class="params">_res</span> =&gt;</span> _res || fetched)</span><br><span class="line">    .catch(<span class="function"><span class="params">_</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (isNavigate) <span class="keyword">return</span> caches.match(<span class="string">'/offline/'</span>);</span><br><span class="line">    &#125;)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>在普通模式下，使用 <code>fetch</code> 请求的资源与缓存比对；在 navigation request 模式下，请求与超时竞争，如果在请求超时前（离线或网络不顺畅）没有返回请求或缓存资源，则抛出 <code>reject</code> 错误，直接渲染已在缓存中就绪的离线页面，为用户提供 Background Sync 后台同步服务。</p>
+<h2 id="Background-Sync-后台同步"><a href="#Background-Sync-后台同步" class="headerlink" title="Background Sync 后台同步"></a>Background Sync 后台同步</h2><p><img src="/images/service-worker-in-practice/background_sync.gif" alt="Background Sync in action" style="margin: 24px auto 40px; width: 80%; min-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);"></p>
+<p>在常见的网页应用上我们经常会遇到这样一个场景，假设我们在某 AO3 刷脆皮鸭：</p>
+<ol>
+<li>哇这篇 AU 文有点甜!?(･_･;? 格兰芬多欧比旺大战伏地魔安纳金？我点爆！！</li>
+<li>*走进厕所辣鸡运营商信号只有半格【碳凝警告 (´･ω･`)</li>
+<li>进度条跑啊跑，最后 Chrome 留给本流泪猫猫头的只有一只灰色小恐龙 _(´ཀ`」 ∠)_</li>
+</ol>
+<p>局限于传统浏览器的工作方法，当用户离开页面（关闭当前 tab、设备休眠）进行中的请求终止；或者当网络状况出错时，在新的请求失败后无法在网络恢复时重新自动发送。而 Background Sync 后台同步的横空出世提供了一种机制以改进这个体验极差的交互：借助 Service Worker 的 <code>sync</code> 事件，我们终于可以在一个行为，如网络请求失败时将其“保存”下来，等待合适时间再次操作。</p>
+<p>我们来看一下，如何利用 Service Worker 的后台同步机制，在博客里改进网络不佳的交互体验：<br><img src="/images/service-worker-in-practice/bg_sync_flowchart.png" alt="background sync flowchart"></p>
+<h3 id="在页面中注册-sync-事件"><a href="#在页面中注册-sync-事件" class="headerlink" title="在页面中注册 sync 事件"></a>在页面中注册 <code>sync</code> 事件</h3><p>在上一节中,我们提到了当网络不加时，请求抛错的处理会返回已在缓存就绪的离线页面，模仿原生 APP 为用户提供一定的视觉提示网络出错，而不是直接显示浏览器默认的灰色错误页面。这个时机便是注册提示浏览器窗口注册新的 <code>sync</code> 事件的最好机会。</p>
+<p>当离线页面加载后便注册新的 <code>sync</code> 事件。由于后台同步功能需要在 Service Worker 注册完成后才能触发，我们在 <code>navigator.serviceWorker.ready</code> 回调中使用 <code>registration.sync.register()</code> 触发后台同步，并传入参数 <code>sync_tag</code> 作为这个后台同步的唯一标识。<code>sync_tag</code> 由同样的前缀，结合每一篇文章本身独特的 id 组成，支持同时打开多个不同路由页面的情况下，当网络恢复时都可以同步刷新。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /swReg.js</span></span><br><span class="line"><span class="keyword">let</span> SYNC_TAG = <span class="string">'my_sync_tag'</span>;</span><br><span class="line">navigator.serviceWorker.ready.then(<span class="function"><span class="params">registration</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">Promise</span>.all([openStore(STORE_NAME), registration]).then(</span><br><span class="line">    ([db, registration]) =&gt; &#123;</span><br><span class="line">      <span class="comment">// 处理 indexdb transactions 与 Service Worker 同步数据</span></span><br><span class="line">      <span class="comment">// ...</span></span><br><span class="line">      <span class="keyword">let</span> titleMatch = <span class="regexp">/^\/(.+\/)*([^\/]+)\/?$/g</span>.exec(location.pathname);</span><br><span class="line">      <span class="keyword">let</span> sync_tag = <span class="string">`<span class="subst">$&#123;SYNC_TAG&#125;</span>-<span class="subst">$&#123;titleMatch ? titleMatch[<span class="number">2</span>] : <span class="string">'home'</span>&#125;</span>`</span>;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 在离线页面里，在 navigator.serviceWorker.ready 后监听消息事件</span></span><br><span class="line">      <span class="keyword">if</span> (IS_OFFLINE) &#123;</span><br><span class="line">        registration.sync</span><br><span class="line">          .register(sync_tag)</span><br><span class="line">          .then(<span class="function"><span class="params">()</span> =&gt;</span> registration.sync.getTags())</span><br><span class="line">          .catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="built_in">console</span>.error(<span class="string">'error while registring background sync'</span>, SYNC_TAG);</span><br><span class="line">          &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  );</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>这里要注意的是，每一个 <code>sync</code> 事件都应有一个<strong>唯一</strong>的 <code>tag</code> 作为标识。假如在前一个 <code>sync</code> 事件还未被处理完成时，就注册同一个标签的新的 <code>sync</code> 事件，两个事件会合并为同一个在 Service Worker 中进行处理。这也说明，如果我们注册的 <code>sync</code> 事件是幂等的（idempotent：多次同样的操作只会有相同的副作用和结果，例如使用 <code>GET</code> 进行请求），就可以使用相同的 <code>tag</code> 将他们合并为同一个事件；否则，在某些非幂等的场景下例如使用 <code>POST</code> 提交请求、聊天软件里离线发送多条不同的消息等，最好为每个 <code>sync</code> 事件都用不同的 <code>tag</code> 来注册。</p>
+<h3 id="在-Service-Worker-中监听处理-sync-事件"><a href="#在-Service-Worker-中监听处理-sync-事件" class="headerlink" title="在 Service Worker 中监听处理 sync 事件"></a>在 Service Worker 中监听处理 <code>sync</code> 事件</h3><p>在触发后台同步后，我们便需要在 Service Worker 中监听处理 <code>sync</code> 事件。在 <code>sync</code> 事件里，我们为熟悉的 <code>e.waitUntil()</code> 传入一个 <code>Promise</code> 对象来判断后台同步是否成功，确保就算用户离开当前页面，Service Worker 也会继续在浏览器后台运行，直到请求完成；如果 <code>Promise</code> 失败了，则浏览器会调度新一个 <code>sync</code> 事件进行重试，而在等待网络恢复的过程中，重试 <code>sync</code> 的时间间隔将会呈<strong>指数性</strong>增加。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /sw.js</span></span><br><span class="line">self.addEventListener(<span class="string">'sync'</span>, e =&gt; &#123;</span><br><span class="line">  <span class="keyword">if</span> (e.tag == <span class="string">'my_sync_tag'</span>) &#123;</span><br><span class="line">    e.waitUntil(</span><br><span class="line">      getSyncURL().then(<span class="keyword">async</span> (&#123; url &#125;) =&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> fetched = fetch(url);</span><br><span class="line">        <span class="keyword">let</span> res = <span class="keyword">await</span> fetched;</span><br><span class="line">        <span class="keyword">let</span> clients = <span class="keyword">await</span> self.clients.matchAll();</span><br><span class="line">        clients.some(<span class="function"><span class="params">client</span> =&gt;</span> &#123;</span><br><span class="line">          <span class="keyword">let</span> clientUrl = <span class="keyword">new</span> URL(client.url);</span><br><span class="line">          <span class="keyword">let</span> isSyncClient = clientUrl.pathname + clientUrl.search == url;</span><br><span class="line">          <span class="keyword">if</span> (isSyncClient)</span><br><span class="line">            client.postMessage(&#123;</span><br><span class="line">              <span class="comment">// 像 URL 与请求资源相同的 client 发送强制更新消息</span></span><br><span class="line">              type: <span class="string">'FORCE_RELOAD'</span>,</span><br><span class="line">              url</span><br><span class="line">            &#125;);</span><br><span class="line">          <span class="keyword">return</span> isSyncClient;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="keyword">return</span> saveCache(url, res);</span><br><span class="line">      &#125;)</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>一旦请求顺利完成，我们再次使用 <code>client.postMessage()</code> 告知当前拥有同样 URL、并且显示离线页面的 client 强制刷新页面：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// /swReg.js</span></span><br><span class="line">navigator.serviceWorker.addEventListener(<span class="string">'message'</span>, e =&gt; &#123;</span><br><span class="line">  <span class="keyword">let</span> &#123; type &#125; = e.data;</span><br><span class="line">  <span class="keyword">if</span> (type == <span class="string">'BG_SYNC_REQUIRE'</span>) &#123;</span><br><span class="line">    <span class="comment">/* 注册 sync 事件*/</span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (type == <span class="string">'FORCE_RELOAD'</span>) &#123;</span><br><span class="line">    <span class="comment">// IS_OFFLINE 是离线页面上独有的全局标识</span></span><br><span class="line">    <span class="keyword">if</span> (IS_OFFLINE &amp;&amp; e.data.url == location.pathname) location.reload();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>这样我们就可以实现即时在离线状态下，也能保存请求状态，以便网络恢复后第一时间再次请求，并将返回的资源存入缓存中啦~ 其实在这个过程中还牵涉到如何在后台同步触发过程中动态提供数据，如请求的 URL 地址，常用的实现方法有 <code>postMessage</code> 消息通知或使用浏览器本地储存功能。在博客改造的实践中，我使用了 indexedDB 实现全局的数据存储，数据交换思路如下：</p>
+<ol>
+<li>在页面里，Service Worker 已注册完后储存当前 URL 信息，</li>
+<li>当 <code>sync</code> 事件触发时，在回调函数中往数据库提取 URL 信息，</li>
+<li>请求该 URL。</li>
+</ol>
+<p>IndexedDB 的强大功能不止于这小小的 CRUD，具体使用方式就不在这一节详细介绍啦，感兴趣的同学可以查看网页源码或者查询 <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" target="_blank" rel="noopener">MDN</a> 的 API 吧~</p>
+<h2 id="Preload-amp-Prefetch-资源预加载"><a href="#Preload-amp-Prefetch-资源预加载" class="headerlink" title="Preload &amp; Prefetch 资源预加载"></a>Preload &amp; Prefetch 资源预加载</h2><p>与 Navigation Preload 不一样的是，Preload 意在提前指定请求隐藏在资源依赖树较深处的资源，加快请求关键链的就绪；而 Prefetch 则支持提前下载<strong>最可能</strong>被访问的资源，如非首屏或下一个路由的资源，当相关资源被访问时可直接从缓存中取出，大大降低最快可交互时间。</p>
+<p>首先我们来看一下 Preload 和 Prefetch 的基本概念：</p>
+<ul>
+<li><strong>preload</strong>: 关注点在当前页面，可以更细粒度地控制加载优先级，优化关键请求链；请求和执行分离并不会阻断 DOM 渲染，保证执行顺序。与浏览器预测解析不同的是，预测解析只能分析 HTML 中外链资源，无法收集到由异步或 CSS 中请求的资源，而 <code>preload</code> 支持指定<strong>提前</strong>请求那些可能会在页面加载中比较晚才引用的资源。<code>preload</code> 常用与加载样式表、首屏大图或 Web Fonts 以减少 FOUC（Flash of Unstyled Content）。</li>
+<li><strong>prefetch</strong>: Link Prefetching 常用于预测用户最可能访问的下一个页面并允许浏览器在空闲时提前请求资源，因此它的请求优先级最低。现在 SWA 常用基于代码分割的异步请求路由，<code>prefetch</code> 可用于提前加载可能被访问到的路由资源，降低路由切换的延迟感；其他常用的 prefetch 包括 DNS Prefetching 和 Prerendering。</li>
+</ul>
+<h3 id="Preload"><a href="#Preload" class="headerlink" title="Preload"></a>Preload</h3><p>在博客升级实践中，考虑到页面大部分内容是文字，样式闪烁和字体闪烁会带来很不好的体验，我主要使用 Preload  预加载  相关 CSS 和字体文件，并对跨域的字体文件加上 <code>crossorigin</code> 字段以避免因跨域造成的双重请求（Preflight Request 和 GET Request）</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">href</span>=<span class="string">"https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2"</span> <span class="attr">rel</span>=<span class="string">"preload"</span> <span class="attr">as</span>=<span class="string">"font"</span> <span class="attr">crossorigin</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">href</span>=<span class="string">"/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0"</span> <span class="attr">rel</span>=<span class="string">"preload"</span> <span class="attr">as</span>=<span class="string">"font"</span> <span class="attr">crossorigin</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">href</span>=<span class="string">"/lib/font-awesome/css/font-awesome.min.css?v=4.6.2"</span> <span class="attr">rel</span>=<span class="string">"preload"</span> <span class="attr">as</span>=<span class="string">"style"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">href</span>=<span class="string">"/css/main.css?v=6.4.2"</span> <span class="attr">rel</span>=<span class="string">"preload"</span> <span class="attr">as</span>=<span class="string">"style"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/service-worker-in-practice/preload.jpg" alt="preload requests" style="width: 80%"> 在 DevTool 的网络版面可以看到，所有请求都是按声明顺序加载的；添加了 <code>crossorigin</code> 的 Preload 请求优先级与 async XHR 一致，而设置了 <code>as=&quot;style&quot;</code> 的请求拥有 Highest 优先权。</p>
+<h3 id="Prefetch"><a href="#Prefetch" class="headerlink" title="Prefetch"></a>Prefetch</h3><p>在用户访问页面首页时， 大概率都会习惯性点开最吸引他/她的页面，或点击导航随意浏览网站的大致内容。在首屏加载完毕并且浏览器后台线程空闲时，提前请求就绪访问频率最高的二级页面资源，能极大地优化交互体验。在博客首页里，最常被访问的莫过于列表里排序最前的文章，通常是置顶或最近作品，可作为 Prefetch 目标对博客进行优化。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">'load'</span>, () =&gt; &#123;</span><br><span class="line">  <span class="built_in">window</span>.requestIdleCallback(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> prefetchArticle = <span class="built_in">document</span>.createElement(<span class="string">'link'</span>);</span><br><span class="line">    <span class="keyword">let</span> url = <span class="keyword">new</span> URL(<span class="built_in">document</span>.querySelector(<span class="string">'.post-title-link'</span>).href);</span><br><span class="line">    prefetchArticle.setAttribute(<span class="string">'href'</span>, url.pathname + url.search);</span><br><span class="line">    prefetchArticle.setAttribute(<span class="string">'rel'</span>, <span class="string">'prefetch'</span>);</span><br><span class="line">    <span class="built_in">document</span>.body.appendChild(prefetchArticle);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>因为使用 Prefetch 获取预测资源属于应用附加优化功能，需防止执行阻塞主线程的渲染和执行，因此在博客首页 <body> 底部，动态添加 <code>rel=&quot;prefetch&quot;</code> 的首篇文章链接，并将这个过程放到 <code>requestIdleCallback</code> 回调函数中进行，当浏览器 Event Loop 运行空档再插入请求。关于 <code>requestIdleCallback</code>的具体用法请参考 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback" target="_blank" rel="noopener">MDN</a> 文档。</body></p>
+<h3 id="MISC"><a href="#MISC" class="headerlink" title="MISC."></a>MISC.</h3><p>Chrome 底层有四种缓存：HTTP 缓存、内存缓存、Service Worker 缓存和 Push 缓存。<code>preload</code> 和 <code>prefetch</code> 是的资源储存在 HTTP 缓存中。因此，即使当 <code>prefetch</code> 请求完成后，也<em>无法断网访问</em>该资源。一般情况下，除非 cache hit 失败例如 HTTP 缓存过期等情况，当标记 <code>preload</code> 资源已存在 Service Worker 缓存或 HTTP 缓存时，不会再发起网络请求，而是直接返回缓存中的资源。</p>
+<p>另外，在<a href="https://medium.com/reloading/preload-prefetch-and-priorities-in-chrome-776165961bbf" target="_blank" rel="noopener">浏览器请求优先级</a>中，使用 <code>as</code> 属性的 <code>preload</code> 或使用 <code>type</code> 属性的 <code>fetch</code> 的优先级与相对应的浏览器请求优先级一样，如 <code>&lt;link rel=“preload” href=“/main.css&quot; as=“style&quot; /&gt;</code> 会有最高优先级，如果 <code>as</code> 不存在则与异步 XHR 优先级一致（High）。</p>
+<p>然而 <code>preload</code> 存在的一些坑， 容易导致请求重复发送，浪费带宽资源：避免同时使用 <code>preload</code> 和 <code>prefetch</code> 去请求同一资源，这导致资源被请求两次；在 <code>preload</code> 时不使用 <code>as</code> 属性也会造成双重请求。在 <code>preload</code> 字体资源，无论资源跨域还是本域，都建议加上 <code>crossorigin</code> 属性以避免双重请求。</p>
+<p>值得一说的是，当用户在 <code>prefetch</code> 请求未完成时离开了当前页面，<code>prefetch</code> 请求不会被终止，并且返回的资源无论本身的 HTTP 缓存策略如何，都会在浏览器缓存中保持 5 分钟。</p>
+<h2 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h2><p>在应用了所有这些 Service Worker 特性后，我们使用 Chrome DevTool 中的性能测试工具给网站跑个分吧~ 首屏渲染 0.68s 是真的很不错 ٩(˃̶͈̀௰˂̶͈́)و 也不枉一个星期的搬砖和码了三天的字了哈哈哈哈！<br><img src="/images/service-worker-in-practice/performance_score.png" alt="performance score" style="width: 80%"></p>
+<h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
+<li><a href="https://developers.google.com/web/fundamentals/primers/service-workers/" target="_blank" rel="noopener">Service Workers: an Introduction</a></li>
+<li><a href="https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook" target="_blank" rel="noopener">The Offline Cookbook</a></li>
+<li><a href="https://developers.google.com/web/updates/2015/12/background-sync" target="_blank" rel="noopener">Introducing Background Sync</a></li>
+<li><a href="https://alienzhou.gitbook.io/learning-pwa/8-shi-yong-service-worker-jin-hang-hou-tai-tong-bu-background-sync" target="_blank" rel="noopener">使用 Service Worker 进行后台同步 - Background Sync</a></li>
+<li><a href="https://medium.com/reloading/preload-prefetch-and-priorities-in-chrome-776165961bbf" target="_blank" rel="noopener">Preload, Prefetch And Priorities in Chrome</a></li>
+<li><a href="https://developers.google.com/web/updates/2017/02/navigation-preload" target="_blank" rel="noopener">Speed up Service Worker with Navigation Preloads</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/optimization/" rel="tag"># optimization</a>
+          
+            <a href="/tags/service-worker/" rel="tag"># service worker</a>
+          
+            <a href="/tags/pwa/" rel="tag"># pwa</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/19/mapbox-localization/" rel="next" title="Mapbox 离线资源本地化实践">
+                <i class="fa fa-chevron-left"></i> Mapbox 离线资源本地化实践
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/01/2018-in-restrospect/" rel="prev" title="2018 in Restrospect">
+                2018 in Restrospect <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Service-Worker-缓存资源离线可用"><span class="nav-number">1.</span> <span class="nav-text">Service Worker 缓存资源离线可用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#install"><span class="nav-number">1.1.</span> <span class="nav-text">install</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#activate"><span class="nav-number">1.2.</span> <span class="nav-text">activate</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fetch"><span class="nav-number">1.3.</span> <span class="nav-text">fetch</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Cache-falling-back-to-network"><span class="nav-number">1.3.1.</span> <span class="nav-text">Cache, falling back to network</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Stale-while-revalidating"><span class="nav-number">1.3.2.</span> <span class="nav-text">Stale-while-revalidating</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Navigation-Preload"><span class="nav-number">2.</span> <span class="nav-text">Navigation Preload</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Background-Sync-后台同步"><span class="nav-number">3.</span> <span class="nav-text">Background Sync 后台同步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#在页面中注册-sync-事件"><span class="nav-number">3.1.</span> <span class="nav-text">在页面中注册 sync 事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在-Service-Worker-中监听处理-sync-事件"><span class="nav-number">3.2.</span> <span class="nav-text">在 Service Worker 中监听处理 sync 事件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Preload-amp-Prefetch-资源预加载"><span class="nav-number">4.</span> <span class="nav-text">Preload &amp; Prefetch 资源预加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Preload"><span class="nav-number">4.1.</span> <span class="nav-text">Preload</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Prefetch"><span class="nav-number">4.2.</span> <span class="nav-text">Prefetch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MISC"><span class="nav-number">4.3.</span> <span class="nav-text">MISC.</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#性能测试"><span class="nav-number">5.</span> <span class="nav-text">性能测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">6.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

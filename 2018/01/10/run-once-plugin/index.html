@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="前言在开发环境下，通常在使用 webpack 在简单的 watch 模式下监听文件内容变化重新编译代码的时候，webpack 将整个项目内匹配到的文件全部重新编译一遍，这就导致所有通过配置文件设置的 loader 和 plugin 需要重新执行来生成新代码。然而当项目本身比较小型时，类似于 HtmlWebpackPlugin 这种只需执行一次便可得出需要的文件，在 watch 下反复执行会大大降低">
+<meta name="keywords" content="webpack,optimization">
+<meta property="og:type" content="article">
+<meta property="og:title" content="run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载">
+<meta property="og:url" content="https://jacelyn.fish/2018/01/10/run-once-plugin/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="前言在开发环境下，通常在使用 webpack 在简单的 watch 模式下监听文件内容变化重新编译代码的时候，webpack 将整个项目内匹配到的文件全部重新编译一遍，这就导致所有通过配置文件设置的 loader 和 plugin 需要重新执行来生成新代码。然而当项目本身比较小型时，类似于 HtmlWebpackPlugin 这种只需执行一次便可得出需要的文件，在 watch 下反复执行会大大降低">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-06-07T12:52:27.587Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载">
+<meta name="twitter:description" content="前言在开发环境下，通常在使用 webpack 在简单的 watch 模式下监听文件内容变化重新编译代码的时候，webpack 将整个项目内匹配到的文件全部重新编译一遍，这就导致所有通过配置文件设置的 loader 和 plugin 需要重新执行来生成新代码。然而当项目本身比较小型时，类似于 HtmlWebpackPlugin 这种只需执行一次便可得出需要的文件，在 watch 下反复执行会大大降低">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2018/01/10/run-once-plugin/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2018/01/10/run-once-plugin/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-01-10 11:08:31" itemprop="dateCreated datePublished" datetime="2018-01-10T11:08:31+08:00">2018-01-10</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-07 20:52:27" itemprop="dateModified" datetime="2019-06-07T20:52:27+08:00">2019-06-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在开发环境下，通常在使用 webpack 在简单的 watch 模式下监听文件内容变化重新编译代码的时候，webpack 将整个项目内匹配到的文件全部重新编译一遍，这就导致所有通过配置文件设置的 loader 和 plugin 需要重新执行来生成新代码。然而当项目本身比较小型时，类似于 HtmlWebpackPlugin 这种只需执行一次便可得出需要的文件，在 watch 下反复执行会大大降低每次编译的速度。然而，webpack 本身并没有可以操作 plugin 的加载和卸载时机的配置项，想要在 webpack 执行过程中手动卸载已执行过一次的插件的话，只能通过另外再写一个插件来实现了。</p>
+<a id="more"></a>
+<blockquote>
+<p>然而当你已经开始为项目引进前端路由或状态管理库时，说明项目已经发展到不适合在开发时只用 webpack 的 watch 模式来监听文件变化了。每次改动都带来全量的编译，需要再次分析文件之间的依赖、打包、合并代码，对比起 webpack-dev-server 的热更新，这种方法未免显得太原始且浪费时间。</p>
+</blockquote>
+<p>run-once-plugin 本身是一个 webpack 的插件，它可以被视为其他插件的<strong>中介</strong>：它接受一组只需运行一次的插件，在 webpack 初始化记录即将被加载的插件钩子函数，并手动将其加入 webpack 的插件集合中；一轮编译过后，立刻从钩子 handlers 中删除之前记录的钩子函数，达到只运行一次的目的。因此，我们需要分析 webpack 插件加载的运行机制，以及编译时生成的 <code>compiler</code> 对象。如果想要了解 webpack 整个执行过程，可以参考淘宝 FED 的这篇文章 <strong><a href="http://taobaofed.org/blog/2016/09/09/webpack-flow/" target="_blank" rel="noopener">细说 webpack 之流程篇</a></strong>。</p>
+<p>插件的代码 Repo: <a href="https://github.com/jacelynfish/run-once-plugin" target="_blank" rel="noopener">https://github.com/jacelynfish/run-once-plugin</a><br>npm: <a href="https://www.npmjs.com/package/run-once-plugin" target="_blank" rel="noopener">https://www.npmjs.com/package/run-once-plugin</a></p>
+<h2 id="webpack-插件的加载"><a href="#webpack-插件的加载" class="headerlink" title="webpack 插件的加载"></a>webpack 插件的加载</h2><h3 id="核心模型"><a href="#核心模型" class="headerlink" title="核心模型"></a>核心模型</h3><p>初始化 webpack 对象其实是创建一个核心的 <code>Compiler</code> 对象，并往其中注入各种插件的钩子函数。<code>Compiler</code> 类是 <code>Tapable</code> 类的子类，其核心就是一个 PubSub 模型：<code>Compiler</code>注册了控制 webpack 运行流程的所有钩子，如<code>make</code>, <code>compile</code>, <code>emit</code>, <code>after-emit</code>等，并将各种插件的钩子函数注册到相应的钩子下。在运行过程中的不同时期，通过调用<code>compiler.applyPlugins</code>, <code>compiler.applyPluginsParallel</code>, <code>compiler.applyPluginsAsyncWaterfall</code>等函数，以同步或异步的方法调用已注册的钩子函数。</p>
+<p>而 <code>Tapable</code> 这个构造函数只是简单地声明了一个私有对象集合 <code>this._plugins</code> 来管理已注册的钩子函数。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tapable/lib/Tapable.js</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">Tapable</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="keyword">this</span>._plugins = &#123;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ......</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 调用已注册的钩子函数</span></span><br><span class="line">Tapable.prototype.applyPlugins = <span class="function"><span class="keyword">function</span> <span class="title">applyPlugins</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(!<span class="keyword">this</span>._plugins[name]) <span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">var</span> args = <span class="built_in">Array</span>.prototype.slice.call(<span class="built_in">arguments</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">var</span> plugins = <span class="keyword">this</span>._plugins[name];</span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; plugins.length; i++)</span><br><span class="line">		plugins[i].apply(<span class="keyword">this</span>, args);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 为不同钩子注册钩子函数</span></span><br><span class="line">Tapable.prototype.plugin = <span class="function"><span class="keyword">function</span> <span class="title">plugin</span>(<span class="params">name, fn</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(<span class="built_in">Array</span>.isArray(name)) &#123;</span><br><span class="line">		name.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.plugin(name, fn);</span><br><span class="line">		&#125;, <span class="keyword">this</span>);</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span>(!<span class="keyword">this</span>._plugins[name]) <span class="keyword">this</span>._plugins[name] = [fn];</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">this</span>._plugins[name].push(fn);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 调用插件 -&gt; 调用钩子函数注册过程</span></span><br><span class="line">Tapable.prototype.apply = <span class="function"><span class="keyword">function</span> <span class="title">apply</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; <span class="built_in">arguments</span>.length; i++) &#123;</span><br><span class="line">		<span class="built_in">arguments</span>[i].apply(<span class="keyword">this</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = Tapable;</span><br></pre></td></tr></table></figure>
+<p>由此可见，webpack 的大部分功能都是由各种小插件集合而成，插件的集合只是简单的 key-val pair 对象，每次钩子被调用时，遍历调动相应的钩子函数数组便可执行各个插件的功能。</p>
+<h3 id="插件加载"><a href="#插件加载" class="headerlink" title="插件加载"></a>插件加载</h3><p>在将用户通过 <code>webpack.config.js</code> 或其他配置文件传入的选项整合入 <code>options</code> 后，<code>webpack/lib/webpack.js</code> 被调用来创建 <code>compiler</code> 对象，并开始编译和构建的流程。在这个过程中插件被初始化：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// webpack/lib/webpack.js</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">webpack</span>(<span class="params">options, callback</span>) </span>&#123;</span><br><span class="line">	<span class="comment">//......</span></span><br><span class="line">	<span class="keyword">let</span> compiler;</span><br><span class="line">	<span class="keyword">if</span>(<span class="built_in">Array</span>.isArray(options)) &#123;</span><br><span class="line">		compiler = <span class="keyword">new</span> MultiCompiler(options.map(<span class="function"><span class="params">options</span> =&gt;</span> webpack(options)));</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span>(<span class="keyword">typeof</span> options === <span class="string">"object"</span>) &#123;</span><br><span class="line">		<span class="comment">//......</span></span><br><span class="line">		<span class="comment">// 初始化 Compiler 对象</span></span><br><span class="line">		compiler = <span class="keyword">new</span> Compiler();</span><br><span class="line">		compiler.context = options.context;</span><br><span class="line">		compiler.options = options;</span><br><span class="line">		<span class="keyword">new</span> NodeEnvironmentPlugin().apply(compiler);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历整合后 otpions的插件列表，逐一调用插件，获取并注册插件里的钩子函数</span></span><br><span class="line">		<span class="keyword">if</span>(options.plugins &amp;&amp; <span class="built_in">Array</span>.isArray(options.plugins)) &#123;</span><br><span class="line">			compiler.apply.apply(compiler, options.plugins);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 调用"environment"和"after-environment"的钩子函数</span></span><br><span class="line">		compiler.applyPlugins(<span class="string">"environment"</span>);</span><br><span class="line">		compiler.applyPlugins(<span class="string">"after-environment"</span>);</span><br><span class="line">		compiler.options = <span class="keyword">new</span> WebpackOptionsApply().process(options, compiler);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"Invalid argument: options"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span>(callback) &#123;</span><br><span class="line">        <span class="comment">// 检测是否 watch 模式</span></span><br><span class="line">        <span class="comment">//......</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 开始构建和编译</span></span><br><span class="line">		compiler.run(callback);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> compiler;</span><br><span class="line">&#125;</span><br><span class="line">exports = <span class="built_in">module</span>.exports = webpack;</span><br></pre></td></tr></table></figure>
+<p>在 watch 模式下，webpack 监听文件系统；当变化发生时，调用在 <code>watch-run</code> 钩子下的函数。然而这整个重新编译的过程使用的都是 <strong>webpack 初始化时所创建的那个 <code>compiler</code> 实例</strong>，所有 plugin 都是在初始化时已被加载进 <code>compiler</code> 的插件集合中，且并没有可以直接操纵私有插件集合的公有 API。因此，要是想在 webpack 运行过程中手动卸载部分插件，只能记录已安装的钩子函数，并在适当的钩子中把它们从从插件集合中删除。</p>
+<h2 id="插件源码解析"><a href="#插件源码解析" class="headerlink" title="插件源码解析"></a>插件源码解析</h2><p>run-once-plugin 给两个钩子注册了钩子函数：<code>environment</code> 和 <code>after-emit</code>。它作为一个普通的插件，它的钩子函数也会在 <code>compiler.apply.apply(compiler, options.plugins);</code> 里被正常注册。</p>
+<h3 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h3><p>由于 <code>environment</code> 是插件注册流程结束后第一个被调用的钩子，在 <code>environment</code> 钩子函数执行时，其他插件的钩子函数都已就位，而传给 run-once-plugin 的插件数组在注册前后，需要经过一下几个步骤：</p>
+<ol>
+<li>确认该钩子函数是第一次运行</li>
+<li>遍历传入 run-once-plugin 的插件数组：<ul>
+<li>记录该插件注册钩子函数之前，<code>compiler</code> 对象中的插件集合为 <code>before</code></li>
+<li>注册该插件的钩子函数</li>
+<li>记录插件注册结束后 <code>compiler</code> 对象中的插件集合为 <code>after</code></li>
+<li>对比 <code>before</code> 和 <code>after</code>，获得该插件所有的钩子函数，将它们保存到私有对象 <code>this.additionalEnv</code> 中</li>
+</ul>
+</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">compiler.plugin(</span><br><span class="line">    <span class="string">'environment'</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">environmentEvent</span>(<span class="params">compilation, callback</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// 确保该钩子函数第一次运行</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>._isRunned) &#123;</span><br><span class="line">            <span class="keyword">this</span>.pluginList.forEach(<span class="function"><span class="params">item</span> =&gt;</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> &#123; plugin, option &#125; = item;</span><br><span class="line">                item.additionalEnv = &#123;&#125;;</span><br><span class="line">                <span class="keyword">let</span> before, after;</span><br><span class="line">                <span class="comment">// 保存 compiler 中插件集合在该插件注册前和注册后的状态</span></span><br><span class="line">                before = deepClone(compiler._plugins);</span><br><span class="line">                compiler.apply.apply(compiler, [<span class="keyword">new</span> plugin(option)]);</span><br><span class="line">                after = deepClone(compiler._plugins);</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 对比 before 和 after，记录该插件新注册的钩子函数</span></span><br><span class="line">                <span class="built_in">Object</span>.keys(after).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!before.hasOwnProperty(key)) &#123;</span><br><span class="line">                        item.additionalEnv[key] = traverseArray(</span><br><span class="line">                            [],</span><br><span class="line">                            after[key]</span><br><span class="line">                        );</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        item.additionalEnv[key] = traverseArray(</span><br><span class="line">                            item.additionalEnv[key]</span><br><span class="line">                                ? item.additionalEnv[key]</span><br><span class="line">                                : before[key],</span><br><span class="line">                            after[key],</span><br><span class="line">                            key</span><br><span class="line">                        );</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;.bind(<span class="keyword">this</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<h3 id="卸载"><a href="#卸载" class="headerlink" title="卸载"></a>卸载</h3><p>由于 <code>after-emit</code> 是整个编译流程中每次构建时最后一个被调用的钩子，在这里把已经运行过一次的插件从 <code>compiler</code> 的插件集合中卸载是个比较保守的选择。卸载的过程非常简单：首先将私有变量 <code>this._isRunned</code> 标记为 <code>true</code>，防止加载一次性插件的逻辑在下一轮 watch 中再次进行；然后对比 <code>compiler._plugins</code> 和已记录的 <code>this.additionalEnv</code>，并在删除 <code>compiler._plugins</code> 中删除记录在 <code>this.additionalEnv</code> 中的所有插件钩子函数。当这个过程完成之后，如被监听的文件发生改变，在下一轮 watch 的编译和构建时，<code>compiler</code> 中已经没有了之前注册的一次性插件。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">compiler.plugin(</span><br><span class="line">    <span class="string">'after-emit'</span>,</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">afterCompileEvent</span>(<span class="params">compilation, cb</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>._isRunned) &#123;</span><br><span class="line">            <span class="keyword">this</span>._isRunned = <span class="literal">true</span>;</span><br><span class="line">            <span class="keyword">let</span> compilerPlugins = compiler._plugins;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 在 compiler 中删除一次性插件的钩子函数</span></span><br><span class="line">            <span class="keyword">this</span>.pluginList.forEach(<span class="function"><span class="params">item</span> =&gt;</span> &#123;</span><br><span class="line">                <span class="keyword">let</span> plugins = item.additionalEnv;</span><br><span class="line">                <span class="built_in">Object</span>.keys(plugins).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (plugins[key].length) &#123;</span><br><span class="line">                        <span class="keyword">let</span> comp = compilerPlugins[key];</span><br><span class="line">                        <span class="keyword">for</span> (<span class="keyword">let</span> fn <span class="keyword">of</span> plugins[key]) &#123;</span><br><span class="line">                            <span class="keyword">var</span> pos = comp.indexOf(fn);</span><br><span class="line">                            <span class="keyword">if</span> (pos != <span class="number">-1</span>) comp.splice(pos, <span class="number">1</span>);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        cb();</span><br><span class="line">    &#125;.bind(<span class="keyword">this</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<h2 id="吐槽与展望"><a href="#吐槽与展望" class="headerlink" title="吐槽与展望"></a>吐槽与展望</h2><p>由于 webpack 文档实在太简单粗暴，直接一句【你们去看源码吧】打发走想开发插件的人，没有办法为了写个插件硬着头皮把 webpack 的源码大致撸了一遍（其实只是弄懂大概流程（。一开始方向不太对，还是踩了一些坑。其实一开始的思路是，在加载阶段 new 一个 <code>subCompiler</code> 实例，然后调用 <code>runAsChild</code> 作为一个单独的 <code>compiler</code> 单独运行一次传进来的插件。下场当然是被各种 context 和 option 虐 QAQ。其实是直接操作数组的方法太简单所以一开始觉得可能真的没这么简单【所以就折腾了一整天【【。而且这里两个对象的深对比还是暴力地 n^2，也没有用其他库，觉得之后这里还是可以优化一下的吧~<br>按你胃，反正最后项目还是用回了 webpack-dev-server 让它热更了哈哈哈哈，这个小插件就当做一次练手和看 webpack 源码的借口吧 (๑•̀ ㅂ•́)و✧</p>
+<h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
+<li><a href="https://webpack.js.org/contribute/writing-a-plugin/" target="_blank" rel="noopener">Writing a Plugin</a> - webpack 官方文档</li>
+<li><a href="http://taobaofed.org/blog/2016/09/09/webpack-flow/" target="_blank" rel="noopener">细说 webpack 之流程篇</a> - 淘宝前端团队</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/webpack/" rel="tag"># webpack</a>
+          
+            <a href="/tags/optimization/" rel="tag"># optimization</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/15/jest-enzyme-antd-dva/" rel="prev" title="踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试">
+                踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#webpack-插件的加载"><span class="nav-number">2.</span> <span class="nav-text">webpack 插件的加载</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#核心模型"><span class="nav-number">2.1.</span> <span class="nav-text">核心模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插件加载"><span class="nav-number">2.2.</span> <span class="nav-text">插件加载</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#插件源码解析"><span class="nav-number">3.</span> <span class="nav-text">插件源码解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#加载"><span class="nav-number">3.1.</span> <span class="nav-text">加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#卸载"><span class="nav-number">3.2.</span> <span class="nav-text">卸载</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#吐槽与展望"><span class="nav-number">4.</span> <span class="nav-text">吐槽与展望</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">5.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

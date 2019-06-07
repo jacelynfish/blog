@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="好久没填坑了呀……从毕设到校招培训，感觉这半年一直横冲直撞没啥沉淀，只要项目来需求撸起袖子就肝【。这个月一直在学可视化开发，Three.js 和 Echarts、D3 都略有接触了，今天就讲讲空间地理可视化的一些经验吧~ 💃🏻💃🏻💃🏻  位置数据的最大好处就在于它与现实世界的联系。 —— N. Yau《数据之美》  在数据可视化的过程中，使用地理坐标系来映射具体位置数据能增强数据背后的">
+<meta name="keywords" content="data visualization,mapbox">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Three.js空间地理可视化：3D行政区域图开发">
+<meta property="og:url" content="https://jacelyn.fish/2018/10/14/generate-3d-map-with-geojson/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="好久没填坑了呀……从毕设到校招培训，感觉这半年一直横冲直撞没啥沉淀，只要项目来需求撸起袖子就肝【。这个月一直在学可视化开发，Three.js 和 Echarts、D3 都略有接触了，今天就讲讲空间地理可视化的一些经验吧~ 💃🏻💃🏻💃🏻  位置数据的最大好处就在于它与现实世界的联系。 —— N. Yau《数据之美》  在数据可视化的过程中，使用地理坐标系来映射具体位置数据能增强数据背后的">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/mercator2.gif">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/fit_comparation.png">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/upside_down.png">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/coordinate_system.png">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/coordinate_transform.png">
+<meta property="og:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/centroid.png">
+<meta property="og:updated_time" content="2019-06-07T12:52:27.586Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Three.js空间地理可视化：3D行政区域图开发">
+<meta name="twitter:description" content="好久没填坑了呀……从毕设到校招培训，感觉这半年一直横冲直撞没啥沉淀，只要项目来需求撸起袖子就肝【。这个月一直在学可视化开发，Three.js 和 Echarts、D3 都略有接触了，今天就讲讲空间地理可视化的一些经验吧~ 💃🏻💃🏻💃🏻  位置数据的最大好处就在于它与现实世界的联系。 —— N. Yau《数据之美》  在数据可视化的过程中，使用地理坐标系来映射具体位置数据能增强数据背后的">
+<meta name="twitter:image" content="https://jacelyn.fish/images/generate-3d-map-with-geojson/mercator2.gif">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2018/10/14/generate-3d-map-with-geojson/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>Three.js空间地理可视化：3D行政区域图开发 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2018/10/14/generate-3d-map-with-geojson/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Three.js空间地理可视化：3D行政区域图开发
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-14 03:37:59" itemprop="dateCreated datePublished" datetime="2018-10-14T03:37:59+08:00">2018-10-14</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-07 20:52:27" itemprop="dateModified" datetime="2019-06-07T20:52:27+08:00">2019-06-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>好久没填坑了呀……从毕设到校招培训，感觉这半年一直横冲直撞没啥沉淀，只要项目来需求撸起袖子就肝【。这个月一直在学可视化开发，Three.js 和 Echarts、D3 都略有接触了，今天就讲讲空间地理可视化的一些经验吧~ 💃🏻💃🏻💃🏻</p>
+<blockquote>
+<p>位置数据的最大好处就在于它与现实世界的联系。 —— N. Yau《数据之美》</p>
+</blockquote>
+<p>在数据可视化的过程中，使用地理坐标系来映射具体位置数据能增强数据背后的环境信息和关联信息，使读者能快速总览某一区域的情况，同时也能聚焦在她/他最关心的某一范围。而在可视化数据大屏的实践里，空间可视化因其宏观、酷炫的效果而常常作为大屏底图，如在 3D 地球或 2D 地图瓦片的基础上，加上热力图、飞线等效果，以更好地展示跨地理区域的数据。本文将会介绍如何通过使用 <a href="https://threejs.org/" target="_blank" rel="noopener">Three.js</a> 和 <a href="https://github.com/d3/d3-geo" target="_blank" rel="noopener">d3-geo</a> 将 Geojson 这种地理数据文件来渲染 WebGL 3D 行政区域图。</p>
+<a id="more"></a>
+<h2 id="基本思路"><a href="#基本思路" class="headerlink" title="基本思路"></a>基本思路</h2><p>本文会着重介绍通过 Geojson 绘制 WebGL 的 3D 行政区域图，关于 Three.js 的场景搭建、raycasting 等会略过~主要有一下几个步骤：</p>
+<ol>
+<li>通过 Geojson 生成 SVG 路径，也就是用在 SVG <code>&lt;path&gt;</code> 标签里的 <code>d</code> 属性值；</li>
+<li>将 SVG 路径生成 Three.js <a href="https://threejs.org/docs/index.html#api/en/extras/core/ShapePath" target="_blank" rel="noopener"><code>ShapePath</code></a> 对象，用于创建 <a href="https://threejs.org/docs/index.html#api/en/geometries/ExtrudeGeometry" target="_blank" rel="noopener"><code>ExtrudeGeometry</code></a> 通过拉伸 2D 平面形状到有高度的 3D 立体图形；</li>
+<li>作 SVG 坐标系统到 Three.js  中右手坐标系的  矩阵变换。</li>
+</ol>
+<p>进入正文之前，先看一下  完整代码和渲染效果八~</p>
+<iframe id="cp_embed_JmygbR" src="//codepen.io/jacelynfish/embed/JmygbR?height=400&theme-id=light&slug-hash=JmygbR&default-tab=js,result" scrolling="no" frameborder="no" height="400" allowtransparency="true" allowfullscreen="true" class="cp_embed_iframe" style="width: 100%; overflow: hidden;"></iframe>
+<h2 id="使用-Geojson-生成-SVG-路径"><a href="#使用-Geojson-生成-SVG-路径" class="headerlink" title="使用 Geojson 生成 SVG 路径"></a>使用 Geojson 生成 SVG 路径</h2><blockquote>
+<p>地理信息可可视化的最基本步骤是地图投影，即将数据中的地理坐标转换到二维的屏幕坐标。讲一个不可展平曲面上位置映射到二维平面，等价于曲面参数化。—— 陈为《数据可视化》</p>
+</blockquote>
+<p> 在获得 Geojson 数据后，我们首先需要将经纬度数据一一映射到屏幕坐标系上。d3-geo 不仅提供了包括 Mercator、Albers 等坐标转换方法，更提供了投影时常用的位移、自定义面积适应等方法，在这里我们选择使用墨卡托投影（Mercator Projection）。</p>
+<p>墨卡托投影又称正轴等角圆柱投影，有投影等角度的特点，即投影面上任何点上两个微分线段组成的角度投影前后保持不变。该方法用一个与地轴方向一致的圆柱切割地球，并按等角度条件，将地球的经纬网投影到圆柱面上。将圆柱面展平后，获得墨卡托投影后的地图。相邻纬线之间的距离由赤道向两级增加，在赤道上的对象保持原始的面积，越远离赤道面积变形越大。</p>
+<p><img src="/images/generate-3d-map-with-geojson/mercator2.gif" alt="mercator_projection"></p>
+<p>由于我们选取广东的纬度较接近赤道，因此投影出来的面积形状形变不会特别  明显， 比较接近实际情况。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> mercator = d3</span><br><span class="line">	.geoMercator()</span><br><span class="line">	.rotate([<span class="number">-150</span>, <span class="number">0</span>, <span class="number">0</span>])</span><br><span class="line">	.fitSize([fitExtent, fitExtent], geojson)</span><br><span class="line">	.precision(<span class="number">0.6</span>);</span><br><span class="line"><span class="keyword">let</span> projection = d3.geoPath(mercator);</span><br></pre></td></tr></table></figure>
+<p>使用 <code>d3.geoMercator()</code> 方法我们创建了墨卡托投影。<code>rotate([angles])</code> 方法  让我们在投影前  对起始经纬度做一个旋转，如我们就在变换前经度上旋转了 150°，使中国大致处于当前地图中心。<code>fitSize(size, object)</code> 对投影后的平面地图进行缩放和位移，将传入的 Geojson <code>object</code> 的投影面积自动按原比例缩放为 <code>size[0] * size[1]</code>。如果不使用自定义的缩放相关方法，d3 会使用默认 scale，而每个投影方法的默认 scale 都不尽一样。默认 scale 将你的目标地理范围放在全球面积的角度来投影，导致投影出来只有一个小点（如下图）= =。除了 <code>fitSize()</code> 或 <code>fitExtent()</code>，你还可以使用 <code>transform.center().scale().translate()</code> 等一系列方法自定缩放、位移的效果，具体用法可以查看 <a href="https://github.com/d3/d3-geo" target="_blank" rel="noopener">d3-geo 相关文档</a>。<br><img src="/images/generate-3d-map-with-geojson/fit_comparation.png" alt="fit_comapration"></p>
+<p>获得投影方法后，就可以正式将 Geojson 的特征数据集转换为 SVG 路径了并同时生成 Three.js 的 <code>ShapePath</code> 对象，用于之后拉伸为立体图形。在这个过程中我们将会使用到《ThreeJS 开发指南》的作者开发的 <a href="https://github.com/asutherland/d3-threeD" target="_blank" rel="noopener">d3threeD</a> 这个小工具，主要是对 SVG 路径字符串解码，将常用 path 命令转换为 Three.js 中相应的路径操作函数。</p>
+<p>但这个  库年久失修（……），没办法处理用科学计数法表示的一些小数和命令（如小写字母 a），也只支持 <code>Shape</code> 对象（<code>ShapePath</code> 区分洞孔，可以更自由地转化为 <code>Shape</code>），因此参考<a href="https://threejs.org/examples/?q=shape#webgl_geometry_extrude_shapes2" target="_blank" rel="noopener">官方示例</a>我对这个库做了一些<a href="https://jacelyn.fish/lib/modules/d3threeD.js">个人修改</a>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// https://jacelyn.fish/lib/modules/d3threeD.js</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 检测由科学计数法表示的小数，一般路径中如果出现这种数字都是及其接近0，误差可以忽略，直接替换为0.0</span></span><br><span class="line"><span class="keyword">const</span> pathPattern = <span class="regexp">/\-?\d+(\.\d+)?e\-?\d+/g</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">d3threeD</span>(<span class="params">exports</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    exports.transformSVGPath = <span class="function"><span class="keyword">function</span> <span class="title">transformSVGPath</span>(<span class="params">_pathStr</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">let</span> pathStr = _pathStr.replace(pathPattern, <span class="string">'0.0'</span>)</span><br><span class="line">        <span class="keyword">var</span> path = <span class="keyword">new</span> THREE.ShapePath(); <span class="comment">// 使用 ShapePath</span></span><br><span class="line">        <span class="keyword">var</span> idx = <span class="number">1</span>,</span><br><span class="line">        len = pathStr.length,</span><br><span class="line">        <span class="comment">//...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 <code>drawGeoSVG</code> 方法中，使用 Geojson 生成 <code>shapes</code> 数组，每项都包括本身的经纬度数据、中心点相对当前 <code>Shape</code> 的距离（以便后续打点）和 <code>Shape</code> 对象本身。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> _d3threeD = &#123;&#125;;</span><br><span class="line">d3threeD(_d3threeD);</span><br><span class="line">transformSVGPath = _d3threeD.transformSVGPath;</span><br><span class="line"></span><br><span class="line"><span class="comment">// drawGeoSVG() line 49 - 78</span></span><br><span class="line"><span class="keyword">let</span> shapes = [];</span><br><span class="line">geojson.features.forEach(<span class="function"><span class="params">feature</span> =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> path = projection(feature);</span><br><span class="line">	<span class="keyword">if</span> (path) &#123;</span><br><span class="line">		<span class="comment">// 这里必要检测 path 是否为 undefined，因为之前使用了自定义缩放，在给定的 fitExtent 距离外的 feature 会生成 undefined</span></span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			<span class="keyword">let</span> _path = transformSVGPath(path); <span class="comment">// 生成 ShapePath</span></span><br><span class="line">			<span class="keyword">let</span> _shapes = _path.toShapes(<span class="literal">false</span>, <span class="literal">false</span>); <span class="comment">// 用 .toShapes 方法将 ShapePath 转换为 Shape</span></span><br><span class="line">			shapes.push(&#123;</span><br><span class="line">				data: <span class="built_in">Object</span>.assign(feature.properties, &#123;</span><br><span class="line">					centroid: projection.centroid(feature) <span class="comment">// 当前 feature 的中心点相对距离x,y，单位像素</span></span><br><span class="line">				&#125;),</span><br><span class="line">				_shapes</span><br><span class="line">			&#125;);</span><br><span class="line">		&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">			<span class="built_in">console</span>.log(e);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p><code>drawGeoSVG</code> 返回的 <code>shapes</code> 数组就是之后拉伸立体图形和  采样描绘轮廓的基础啦~</p>
+<h2 id="轮廓描边和-3D-拉伸深-度"><a href="#轮廓描边和-3D-拉伸深-度" class="headerlink" title="轮廓描边和 3D 拉伸深  度"></a>轮廓描边和 3D 拉伸深  度</h2><h3 id="轮廓描边"><a href="#轮廓描边" class="headerlink" title="轮廓描边"></a>轮廓描边</h3><p>绘制轮廓的  逻辑其实很直白，就是在 <code>Shape</code> 路径中采样并将点集生成 <code>THREE.Line</code> 对象即可。生成的轮廓不用马上添加到场景里，而是添加到之后生成的、各自所属的  立体图形  中。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">drawOutlines</span>(<span class="params">shapes</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// line 130- 156</span></span><br><span class="line">	<span class="keyword">let</span> outlines = [];</span><br><span class="line">	shapes.forEach(<span class="function"><span class="params">item</span> =&gt;</span> &#123;</span><br><span class="line">		<span class="keyword">let</span> lines = <span class="keyword">new</span> THREE.Group(); <span class="comment">// 一个行政区可能会有多个闭合形状</span></span><br><span class="line">		lines.userData.name = <span class="string">'Administrative Lines'</span>;</span><br><span class="line">		item._shapes.forEach(<span class="function"><span class="params">shape</span> =&gt;</span> &#123;</span><br><span class="line">			<span class="keyword">let</span> pts = shape.getPoints();</span><br><span class="line">			<span class="keyword">let</span> line = <span class="keyword">new</span> THREE.Line(</span><br><span class="line">				<span class="keyword">new</span> THREE.Geometry(),</span><br><span class="line">				<span class="keyword">new</span> THREE.LineBasicMaterial(&#123;</span><br><span class="line">					color: highLightColor</span><br><span class="line">				&#125;)</span><br><span class="line">			);</span><br><span class="line">			pts.forEach(<span class="function"><span class="params">pt</span> =&gt;</span> &#123;</span><br><span class="line">				line.geometry.vertices.push(<span class="keyword">new</span> THREE.Vector3(pt.x, pt.y, <span class="number">0</span>));</span><br><span class="line">				line.geometry.colors.push(highLightColor);</span><br><span class="line">			&#125;);</span><br><span class="line">			lines.add(line);</span><br><span class="line">		&#125;);</span><br><span class="line">		outlines.push(lines);</span><br><span class="line">	&#125;);</span><br><span class="line">	<span class="keyword">return</span> outlines;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="立体拉伸"><a href="#立体拉伸" class="headerlink" title="立体拉伸"></a>立体拉伸</h3><p><code>THREE.ExtrudeGeometry()</code> 接收 <code>Shape</code> 或者 <code>Shape</code> 数组，通过增加深度的方式拉伸平面图形为立体几何。乍看上去十分方便，直接传入 <code>{ depth: 50 }</code> 这样的配置就可得到自己想要的高度。但是仔细一想，这样直接生成的几何体顶点 vertices 的值都是固定的，如果需要实现，如示例般交互动态改变拉伸长度，就需要手动管理 <code>geometry.vertices</code> 这些成千上万个顶点的位置，如果结合材质，还要更新计算 UV mapping（😨 听起来就很累人……</p>
+<p>这时候就可以转换一下思维啦：想要改变物体的形状，除了计算集合本身的顶点位置，还有什么其他方法呢？参考官方示例里的大量动画效果，如 autoRotate 等，都是在每一轮渲染循环里直接改变 Mesh 的 <code>rotation</code> 属性！以此类推，动态改变长度是不是可以直接  修改某一轴 <code>scale</code> 属性呢嘻嘻嘻 👻</p>
+<p>因此，我们可以在创建一个深度为 1 的拉伸几何体并创建网格对象后，通过修改该 <code>Mesh</code> 的 <code>scale.z</code> 值实现动态拉伸的效果~</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> group = <span class="keyword">new</span> THREE.Group(); <span class="comment">// 将所有子行政区集合到一个 Group 中以便后续统一矩阵变换</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// drawProvince(shapes, outlines) line 80 - 128</span></span><br><span class="line">shapes.forEach(<span class="function">(<span class="params">item, i</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">let</span> geometry = <span class="keyword">new</span> THREE.Geometry();</span><br><span class="line">	item._shapes.forEach(<span class="function"><span class="params">shape</span> =&gt;</span> &#123;</span><br><span class="line">		<span class="comment">// 创建一个深度为 1 的拉伸几何体</span></span><br><span class="line">		<span class="keyword">let</span> extrude = <span class="keyword">new</span> THREE.ExtrudeGeometry(</span><br><span class="line">			shape,</span><br><span class="line">			<span class="built_in">Object</span>.assign(&#123; <span class="attr">depth</span>: <span class="number">1</span> &#125;, extrudeOpts)</span><br><span class="line">		);</span><br><span class="line">		<span class="comment">// 一个相同的行政区域可能会在形状上分割成很多闭合的部分，</span></span><br><span class="line">		<span class="comment">// 用 geometry.merge()方法聚合同一个行政区的几何形状</span></span><br><span class="line">		geometry.merge(extrude);</span><br><span class="line">	&#125;);</span><br><span class="line">	<span class="keyword">let</span> mesh = <span class="keyword">new</span> THREE.Mesh(geometry, <span class="keyword">new</span> THREE.MeshNormalMaterial(&#123;&#125;));</span><br><span class="line">	mesh.add(outlines[i]); <span class="comment">// 将之前绘制的行政区域轮廓添加为网格的子元素</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">let</span> scaleZ = minExtrude; <span class="comment">// 初始拉伸长度</span></span><br><span class="line">	mesh.scale.set(<span class="number">1</span>, <span class="number">1</span>, scaleZ); <span class="comment">// 拉伸Z轴实现立体效果</span></span><br><span class="line">	mesh.position.z = -scaleZ; <span class="comment">// 同时也往Z轴负方向位移相应距离</span></span><br><span class="line">	outlines[i].position.z = <span class="number">-1</span> / scaleZ; <span class="comment">// 解决轮廓闪烁问题</span></span><br><span class="line">	mesh.userData = item.data;</span><br><span class="line">	group.add(mesh);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>注意在 16 行里我们将之前绘制的行政区域轮廓添加为相应网格的子元素，这能使轮廓和网格成为一个整体，<strong>随后的拉伸和位移会应用到这个整体上</strong>。另外，由于上一小节中的轮廓因为开启了 depthBuffer 检测，如果轮廓和网格表面在 z 轴同一位置上会出现闪烁的 bug，需要将轮廓位移到网格的 1px 外。因现在  轮廓所在的本地坐标 Z 轴已经被扩大了了 <code>scaleZ</code> 倍，因此需要手动缩小响应倍数。</p>
+<p>此时，只要改变相应网格的 <code>scale.z</code> 就可以动态改变几何体的高度啦~在这个例子里我们使用的是 raycasting，鼠标移过的区域会动态随机高度和改变材质颜色，并在中心位置出现地名标签。通过 Tween.js 为高度过渡实现了动画，让交互过程更自然~</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">changeGroupHeight</span>(<span class="params">mesh, height</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">let</span> scaleZ = &#123; <span class="attr">z</span>: mesh.scale.z &#125;;</span><br><span class="line">	<span class="keyword">let</span> isComplete = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">let</span> tween = <span class="keyword">new</span> TWEEN.Tween(scaleZ)</span><br><span class="line">		.to(&#123; <span class="attr">z</span>: height &#125;, <span class="number">800</span>)</span><br><span class="line">		.easing(TWEEN.Easing.Quartic.Out)</span><br><span class="line">		.onUpdate(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">			<span class="comment">// 通过改变z轴拉伸范围来修改几何体的高度</span></span><br><span class="line">			mesh.scale.set(<span class="number">1</span>, <span class="number">1</span>, scaleZ.z);</span><br><span class="line">			mesh.position.z = -scaleZ.z;</span><br><span class="line">			mesh.children[<span class="number">0</span>].position.z = <span class="number">-1</span> / scaleZ.z;</span><br><span class="line">		&#125;)</span><br><span class="line">		.onComplete(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">			isComplete = <span class="literal">true</span>;</span><br><span class="line">		&#125;);</span><br><span class="line">	<span class="keyword">let</span> update = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">		TWEEN.update();</span><br><span class="line">		!isComplete &amp;&amp; requestAnimationFrame(update);</span><br><span class="line">	&#125;;</span><br><span class="line">	tween.start();</span><br><span class="line">	update();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/generate-3d-map-with-geojson/upside_down.png" alt="upside_down"></p>
+<p>看起来效果还不错呢~只是……还有一个<em>小</em>问题：为啥整个图是反过来的啊啊啊？？？🙄</p>
+<h3 id="坐标转换"><a href="#坐标转换" class="headerlink" title="坐标转换"></a>坐标转换</h3><p>到目前为止，绘制出来的行政图 Y 轴方向相反的原因其实是 WebGL 和 SVG 坐标系统未做转换的问题。如图所示，在 WebGL 中的世界坐标系使用的是右手坐标系（Right Handed Coordinate System）Y 轴正方向指向<strong>上</strong>；而 SVG 使用的坐标系统跟 Canvas 类似的视口坐标系，视口左上角为原点(0, 0)，Y 轴正方向为<strong>下</strong>。<br><img src="/images/generate-3d-map-with-geojson/coordinate_system.png" alt="coordinate_system">在这个映射的过程中，若是直接将 d3threeD 生成的 <code>Shape</code> 直接放置入场景中，必定会出现纵坐标相反的问题。<br><img src="/images/generate-3d-map-with-geojson/coordinate_transform.png" alt="coordinate_transform"> 这时便需要对整个 3D 图形 <code>group</code> 实现坐标变换。在这个过程中我们直接使用矩阵同时实现 Y 轴和 Z 轴的翻转和中心点位移。关于矩阵转换可以参考<a href="https://webglfundamentals.org/webgl/lessons/webgl-3d-orthographic.html" target="_blank" rel="noopener">这篇教程</a>。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getPosMat</span>(<span class="params">x, y, z</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">let</span> posMat = <span class="keyword">new</span> THREE.Matrix4();</span><br><span class="line">	<span class="comment">// rotateZ(Math.PI)</span></span><br><span class="line">	<span class="comment">// rotateY(Math.PI)</span></span><br><span class="line">	posMat.set(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, x, <span class="number">0</span>, <span class="number">-1</span>, <span class="number">0</span>, y, <span class="number">0</span>, <span class="number">0</span>, <span class="number">-1</span>, z, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">return</span> posMat;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">drawProvince</span>(<span class="params">shapes, outlines</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// x 和 y 分别位移 fitExtent / 2 的位置至原点</span></span><br><span class="line">	<span class="keyword">let</span> posMat = getPosMat(-fitExtent / <span class="number">2</span>, fitExtent / <span class="number">2</span>, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// ... 上述的绘制立体图形逻辑</span></span><br><span class="line"></span><br><span class="line">	group.applyMatrix(posMat); <span class="comment">// 整个立体图形整体翻转和位移</span></span><br><span class="line">	scene.add(group);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样就能得到一个位于 WebGL 坐标轴原点的立体地理图形啦~🤓</p>
+<h2 id="中心标签打点"><a href="#中心标签打点" class="headerlink" title="中心标签打点"></a>中心标签打点</h2><p>很多第三方库在实现文字打点的时会直接在 WebGL 中渲染文字，但这种方案生成的文字标签也是一个 3D 元素，如果不进行特殊大小处理，会随镜头的拉伸有很明显的缩放；同时渲染文字在也对 Three.js 应用有很高的性能要求。因此在这个例子里，我们创建 DOM 节点来生成动态标签，用 CSS 控制它的动画和位置。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> label = <span class="built_in">document</span>.getElementById(<span class="string">'map-label'</span>);</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getPoint2ScreenCoord</span>(<span class="params">target</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">let</span> mat = <span class="keyword">new</span> THREE.Matrix4();</span><br><span class="line">	<span class="keyword">let</span> wHeight = <span class="built_in">window</span>.innerHeight;</span><br><span class="line">	<span class="keyword">let</span> wWidth = <span class="built_in">window</span>.innerWidth;</span><br><span class="line">	<span class="comment">// WebGL 视口坐标系转换为屏幕坐标系的矩阵</span></span><br><span class="line">	mat.set(</span><br><span class="line">		wWidth / <span class="number">2</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		wWidth / <span class="number">2</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		-wHeight / <span class="number">2</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		wHeight / <span class="number">2</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">1</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">0</span>,</span><br><span class="line">		<span class="number">1</span></span><br><span class="line">	);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 中心点相对目标3D形状坐标 -&gt; 世界坐标 -&gt; 屏幕坐标</span></span><br><span class="line">	<span class="keyword">let</span> centroid = target.userData.centroid;</span><br><span class="line">	<span class="keyword">let</span> pos = target.localToWorld(</span><br><span class="line">		<span class="keyword">new</span> THREE.Vector3(centroid[<span class="number">0</span>], centroid[<span class="number">1</span>], <span class="number">0</span>)</span><br><span class="line">	);</span><br><span class="line">	<span class="keyword">let</span> &#123; x, y &#125; = pos.project(camera).applyMatrix4(mat);</span><br><span class="line"></span><br><span class="line">	label.style.left = x + <span class="string">'px'</span>;</span><br><span class="line">	label.style.top = y + <span class="string">'px'</span>;</span><br><span class="line">	label.style.opacity = <span class="number">1</span>;</span><br><span class="line">	label.textContent = selectedObject.userData.name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/generate-3d-map-with-geojson/centroid.png" alt="centroid">之前储存在 <code>userData</code> 里的 <code>centroid</code> 数组在打点时就派上用场啦。如图，它的数值是 <code>[相对x, 相对y]</code>，将相对坐标转换为世界坐标后再映射到屏幕坐标，将 x 和 y 分别赋予绝对定位 DOM 元素的 <code>left</code> 和 <code>top</code> 样式即可。</p>
+<p>到这里，我们就通过 Geojson 数据，一步一步生成了一个可交互的 Three.js 立体地理区域图~撒花~~~٩(˃̶͈̀௰˂̶͈́)و</p>
+<h2 id="最后的一点碎碎念"><a href="#最后的一点碎碎念" class="headerlink" title="最后的一点碎碎念"></a>最后的一点碎碎念</h2><p>虽然说现在市面上 Echarts 或者其他可视化组件库都能通过配置直接生成这种行政区域图，然而大屏本质上作为展示数据的<em>静态</em>页面（弱交互、定制化高），为了生成某一个省市而引入庞大的第三方库貌似在打包体积和性能上得不偿失啊……再者，高度定制化的特点使得第三方库的配置项未必能满足所有设计原型，因此才有这个从最基础 geojson 数据搭建组件的想法。</p>
+<p> 借这篇 po 来记录造轮子的的思考过程之余，其实也收获了不少可视化开发的通用技巧，如</p>
+<ul>
+<li>使用 d3threeD 将通用 SVG 路径转换为 Three.js <code>ShapePath / Shape</code> 后，可进一步生成其他网格</li>
+<li> 矩阵变换的使用，包括普通形变和从 Three.js 场景坐标轴到屏幕坐标轴的映射</li>
+</ul>
+<p>按你胃，造这个轮子的过程真的踩了很多坑，包括上面提到的纵轴相反的转换和动态拉伸长度。往往这些瓶颈只要逆向思考一下就能找到非常规的实现方法，真的锻炼个人解决问题的思维，推着自己 think out of the box，也是蛮受益匪浅的，因为这个 3D 地图和之前项目里开发的 3D 地球，打开了 GIS 新世界的大门，了解了很多地理信息学的概念和算法，也夯实了 WebGL 基础（其实更多是 Three.js 的 API 啦哈哈哈哈），大概下一篇就会介绍扒瓦片的血泪之路吧【。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/data-visualization/" rel="tag"># data visualization</a>
+          
+            <a href="/tags/mapbox/" rel="tag"># mapbox</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/15/jest-enzyme-antd-dva/" rel="next" title="踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试">
+                <i class="fa fa-chevron-left"></i> 踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/19/mapbox-localization/" rel="prev" title="Mapbox 离线资源本地化实践">
+                Mapbox 离线资源本地化实践 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本思路"><span class="nav-number">1.</span> <span class="nav-text">基本思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用-Geojson-生成-SVG-路径"><span class="nav-number">2.</span> <span class="nav-text">使用 Geojson 生成 SVG 路径</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#轮廓描边和-3D-拉伸深-度"><span class="nav-number">3.</span> <span class="nav-text">轮廓描边和 3D 拉伸深  度</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#轮廓描边"><span class="nav-number">3.1.</span> <span class="nav-text">轮廓描边</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#立体拉伸"><span class="nav-number">3.2.</span> <span class="nav-text">立体拉伸</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#坐标转换"><span class="nav-number">3.3.</span> <span class="nav-text">坐标转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中心标签打点"><span class="nav-number">4.</span> <span class="nav-text">中心标签打点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最后的一点碎碎念"><span class="nav-number">5.</span> <span class="nav-text">最后的一点碎碎念</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

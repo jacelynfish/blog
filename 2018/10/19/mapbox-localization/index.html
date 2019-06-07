@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="在空间数据可视化领域里，开源产品 Mapbox GL 无疑是搭建 3D 地理场景的最佳选择了。相比于传统的栅格瓦片资源，Mapbox 支持使用矢量地图切片渲染可交互的、可按图层配置样式的动态地图，并且使用 Protocol Buffer 编码的瓦片数据体积比图片资源更小，更一步节省地图消耗的流量。OpenStreetMap（下文简称 OSM）为 Mapbox 在线 API 提供了自然/人文地理数据">
+<meta name="keywords" content="data visualization,mapbox,GIS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mapbox 离线资源本地化实践">
+<meta property="og:url" content="https://jacelyn.fish/2018/10/19/mapbox-localization/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="在空间数据可视化领域里，开源产品 Mapbox GL 无疑是搭建 3D 地理场景的最佳选择了。相比于传统的栅格瓦片资源，Mapbox 支持使用矢量地图切片渲染可交互的、可按图层配置样式的动态地图，并且使用 Protocol Buffer 编码的瓦片数据体积比图片资源更小，更一步节省地图消耗的流量。OpenStreetMap（下文简称 OSM）为 Mapbox 在线 API 提供了自然/人文地理数据">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://jacelyn.fish/images/mapbox-localization/clip1.png">
+<meta property="og:image" content="https://jacelyn.fish/images/mapbox-localization/clip2.png">
+<meta property="og:image" content="https://jacelyn.fish/images/mapbox-localization/clip3.png">
+<meta property="og:image" content="https://jacelyn.fish/images/mapbox-localization/clip4.png">
+<meta property="og:updated_time" content="2019-06-07T12:52:27.586Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mapbox 离线资源本地化实践">
+<meta name="twitter:description" content="在空间数据可视化领域里，开源产品 Mapbox GL 无疑是搭建 3D 地理场景的最佳选择了。相比于传统的栅格瓦片资源，Mapbox 支持使用矢量地图切片渲染可交互的、可按图层配置样式的动态地图，并且使用 Protocol Buffer 编码的瓦片数据体积比图片资源更小，更一步节省地图消耗的流量。OpenStreetMap（下文简称 OSM）为 Mapbox 在线 API 提供了自然/人文地理数据">
+<meta name="twitter:image" content="https://jacelyn.fish/images/mapbox-localization/clip1.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2018/10/19/mapbox-localization/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>Mapbox 离线资源本地化实践 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2018/10/19/mapbox-localization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Mapbox 离线资源本地化实践
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-19 16:25:23" itemprop="dateCreated datePublished" datetime="2018-10-19T16:25:23+08:00">2018-10-19</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-07 20:52:27" itemprop="dateModified" datetime="2019-06-07T20:52:27+08:00">2019-06-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在空间数据可视化领域里，开源产品 <a href="https://www.mapbox.com/mapbox-gl-js/api/#map" target="_blank" rel="noopener">Mapbox GL</a> 无疑是搭建 3D 地理场景的最佳选择了。相比于传统的栅格瓦片资源，Mapbox 支持使用矢量地图切片渲染可交互的、<strong>可按图层配置样式</strong>的动态地图，并且使用 Protocol Buffer 编码的瓦片数据体积比图片资源更小，更一步节省地图消耗的流量。<a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a>（下文简称 OSM）为 Mapbox 在线 API 提供了自然/人文地理数据，它是一个由全球各地的地理爱好者共同参与贡献数据的开源项目，而 Mapbox 也是其最大的贡献者之一。</p>
+<p>想要使用 Mapbox GL，最直白的方法便是在引用了相应的 JS/CSS 文件后，使用官方提供的开发者 <code>accessToken</code> 去获取地图瓦片及其他资源，如<a href="https://www.mapbox.com/mapbox-gl-js/example/simple-map/" target="_blank" rel="noopener">官网示例</a>：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript">mapboxgl.accessToken = <span class="string">'&lt;your access token here&gt;'</span>; <span class="comment">// 访问默认瓦片资源</span></span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> map = <span class="keyword">new</span> mapboxgl.Map(&#123;</span></span><br><span class="line"><span class="javascript">    container: <span class="string">'map'</span>, <span class="comment">// container id</span></span></span><br><span class="line"><span class="javascript">    style: <span class="string">'mapbox://styles/mapbox/streets-v9'</span>, <span class="comment">// stylesheet location</span></span></span><br><span class="line"><span class="javascript">    center: [<span class="number">-74.50</span>, <span class="number">40</span>], <span class="comment">// starting position [lng, lat]</span></span></span><br><span class="line"><span class="javascript">    zoom: <span class="number">9</span> <span class="comment">// starting zoom</span></span></span><br><span class="line">&#125;);</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>然而由于某些不可描述的原因，我们无法直接通过 Mapbox GL JS API 访问国外地图瓦片资源，即使挂了代理，瓦片资源加载也非常慢；再者，在 toB 的业务场景里，由于企业数据的保密等要求，首要条件就是产品需部署在独立内网里，这意味着我们不能为了一个酷炫的大屏效果而去访问互联网数据，而是将所需地图资源实现本地储存、访问。在这篇文章我们将会介绍如何获取 OSM 数据，并通过 <a href="https://github.com/mapbox" target="_blank" rel="noopener">Mapbox 官方开源工具</a>生成、在 Nginx 上部署本地矢量瓦片资源。</p>
+<a id="more"></a>
+<h2 id="获取-OSM-数据"><a href="#获取-OSM-数据" class="headerlink" title="获取 OSM 数据"></a>获取 OSM 数据</h2><p>有以下几个途径可以快速获得 OSM 数据</p>
+<ul>
+<li><a href="https://www.openstreetmap.org" target="_blank" rel="noopener"><strong>OpenStreetMap 官方网站</strong></a>: 直接下载 <code>.osm</code> 数据</li>
+<li><a href="https://export.hotosm.org/en/v3/" target="_blank" rel="noopener"><strong>Hotosm Export Tool</strong></a>: 按数据类型（路网、水域、建筑）分类导出数据，支持 <code>.shp</code>, <code>.geojson</code>, <code>.mbtiles</code> 等数据格式。不过需要注意的是 hotosm 上导出的 <code>mbtiles</code> 是彩色栅格图片，无法直接通过 Mapbox 配置样式</li>
+<li><a href="https://extract.bbbike.org/" target="_blank" rel="noopener"><strong>bbbike</strong></a>: bbbike 导出的 OSM 数据具有较完整的属性数据，一次导出最大支持 24,000,000 平方公里或 512 MB 的数据。</li>
+<li><a href="http://openstreetmapdata.com/data/water-polygons" target="_blank" rel="noopener"><strong>OpenStreetMapData</strong></a>: 根据 OSM 数据里的 <code>natural=coastline</code> 生成的海洋和陆地的 polygon，并做了切分便于数据提取。</li>
+</ul>
+<h2 id="Geo-数据处理、提取"><a href="#Geo-数据处理、提取" class="headerlink" title="Geo 数据处理、提取"></a>Geo 数据处理、提取</h2><p>在分析、处理 GIS 相关数据时，常需要查看相关属性并对数据进行编辑和选择性导出。在这篇文章中我们使用开源 GIS 编辑器 <a href="https://qgis.org/en/site/" target="_blank" rel="noopener">QGIS</a> 来对数据进行预处理：</p>
+<h3 id="人文数据处理"><a href="#人文数据处理" class="headerlink" title="人文数据处理"></a>人文数据处理</h3><p>由于 <a href="https://extract.bbbike.org/" target="_blank" rel="noopener">bbbike</a> 这里导出的额外属性（路名、道路类型等）比较全，我们这篇文章主要采用 bbbike 导出的数据渲染道路网、路名和内地水域；我们可以把所有数据导出为一份 <code>.geojson</code> 文件，通过 Mapbox GL 中 <code>source-layer</code> 配置项指定图层名，以图层为单位渲染不同类型的地理信息；或不同类型各自导出独立 <code>.geojson</code> 文件并使用 <a href="https://github.com/mapbox/tippecanoe" target="_blank" rel="noopener">tippecanoe</a> 合并瓦片，具体操作会在下文介绍 🌚</p>
+<h3 id="海岸线处理"><a href="#海岸线处理" class="headerlink" title="海岸线处理"></a>海岸线处理</h3><p>当需求场景所在的地理位置是在沿海城市时，我们便需要区分陆地和海洋，而 OSM 的数据里只用 <code>natural=coastline</code> 标记海岸线，没有具体区分 land/ocean，因此采用 <a href="http://openstreetmapdata.com/data/water-polygons" target="_blank" rel="noopener">OpenStreetMapData</a> 这里的数据渲染海岸线图案。因为陆地和海洋的形状是互补的，为了展示海岸线我们不必同时生成两者在同一经纬度范围的瓦片，而是生成其中一种地形，并用颜色或其他视觉效果形成对比。这里就有一个权衡的过程了：当展示的内容面积主要在陆地上时，生成部分海洋瓦片用于视觉展示；相反的情况下，生成陆地瓦片，能有效减少静态瓦片资源大小。</p>
+<p>因为我们主要展示陆地路网，所以选择生成部分海边水域的瓦片。然而即使沿海岸线的水域已经切分成小区域，每一块多边形依然覆盖了远超我们需要展示的面积，借助一些小技巧便可自由框取我们实际需要的瓦片范围：</p>
+<ol>
+<li>在 <a href="https://geojson.io" target="_blank" rel="noopener">geojson.io</a> 框出期望展示的经纬度范围，形成一个多边形的 geojson 文件并导入 QGIS 中，放置于待处理图层上；<img src="/images/mapbox-localization/clip1.png" alt="clip1"></li>
+<li>点击 QGIS 工具栏 -&gt; Vector -&gt; Geoprocessing Tools -&gt; Clip, <img src="/images/mapbox-localization/clip2.png" alt="clip2" style="width: 50%;"> <code>Input Layer</code> 选择刚刚导入的 geojson helper 层， <code>Clip Layer</code> 选择从中抠取的待处理图层，并填写好结果图层名称后选择 <code>Run in Background</code> 即可生成选择图形。只有 <code>Input Layer</code> 和 <code>Clip Layer</code> 相交的范围会被选中。数据中 Features 的值并不会变化，变化的只是导出图层的面积和长宽等属性。如果这些值在被切割前当做属性储存在 GIS 数据里，这些值也需要手动更新；<img src="/images/mapbox-localization/clip3.png" alt="clip3"> <img src="/images/mapbox-localization/clip4.png" alt="clip4" style="width: 50%;"></li>
+<li>在 attribute table 中选取需要的字段，并导出当前图层用于后续生成瓦片就得到期望范围的 geojson 形状啦 ʕ •ᴥ•ʔ</li>
+</ol>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p>除了 QGIS，还可使用这些工具查看、编辑和转换其他格式的 GIS 文件：</p>
+<ul>
+<li><a href="https://mapshaper.org/" target="_blank" rel="noopener"><strong>Mapshaper</strong></a>：可用于在线 ShapeFile 查看、转换为 <code>.geojson</code></li>
+<li><a href="https://www.gdal.org/ogr2ogr.html" target="_blank" rel="noopener"><strong>ogr2ogr</strong></a>：转换 ShapeFile、MapInfo、PostgreSQL 等格式的 GIS 数据，并支持属性选择和坐标系统转换等功能</li>
+<li><a href><strong>ArcGIS</strong></a></li>
+</ul>
+<h2 id="搭建矢量瓦片服务"><a href="#搭建矢量瓦片服务" class="headerlink" title="搭建矢量瓦片服务"></a>搭建矢量瓦片服务</h2><p>GIS 数据生成矢量瓦片的具体流程主要有这几步：</p>
+<ol>
+<li><p>使用 Mapbox 开源瓦片数据处理工具 <a href="https://github.com/mapbox/tippecanoe" target="_blank" rel="noopener">tippecanoe</a> 转换 json 数据为 <code>.mbtiles</code> 格式。在这个过程中可进行独立图层合并、设置缩放范围和过滤属性等操作；</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tippecanoe -o geodata.mbtiles -z 18 -Z 13 -f -n geodata ~/road.geojson ~/water.geojson ~/sea.geojson;</span><br></pre></td></tr></table></figure>
+<p> <a href="https://www.mapbox.com/help/define-mbtiles/" target="_blank" rel="noopener">MBTiles</a> 是一个由 Mapbox 制定的、基于 SQLite 的开源规范，通过视图减少冗余瓦片在文件系统中的体积，用于高效储存矢量或栅格瓦片数据。tippecanoe 生成的 MBTiles 会合并所有输入文件为多个图层，源文件名便是图层名；也可以使用 <code>-l name</code> 来指定图层名，但这个指令会合并所有源数据为一个图层。更多选项请参考<a href="https://github.com/mapbox/tippecanoe" target="_blank" rel="noopener">官方仓库</a>；</p>
+</li>
+<li><p>由于 <code>.mbtiles</code> 文件<strong>本身不是瓦片</strong>，而是储存瓦片的数据库文件，需要使用 <a href>mb-util</a> 将矢量瓦片数据导出为可直接作为静态文件请求的 <code>.pbf</code> 格式；</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mb-util --image_format=pbf geodata.mbtiles ~/tiles/geodata/map/;</span><br></pre></td></tr></table></figure>
+<p> 导出的瓦片会以 z（缩放级别）/ x（瓦片列数）/ y（瓦片行数） 形式储存在磁盘上，在随后的 Mapbox 配置中也会以这个顺序索引矢量文件；</p>
+</li>
+<li><p>因为 mb-util 导出的瓦片经过 gzip 压缩，无法被 Mapbox GL 直接解析，因此我们需要解压该 <code>.pbf</code> 文件；</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd ~/tiles/geodata/map/;</span><br><span class="line">gzip -d -r -S .pbf *;</span><br><span class="line">find . -type f -exec mv '&#123;&#125;' '&#123;&#125;'.pbf \; // optional</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>搭建 nginx 静态文件服务器。另外需要注意的一点是，当我们生成的切片是在一定区域而不是全球范围内时，当 Mapbox 请求了生成切片范围外的瓦片时会大量报错 404，虽然 Mapbox 已经在 <a href="https://github.com/mapbox/mapbox-gl-js/releases/tag/v0.48.0" target="_blank" rel="noopener">release v0.48.0</a> 上将响应为 404 或 200 的资源视为<em>可渲染的空切片（empty renderable tiles）</em>来<a href="https://github.com/mapbox/mapbox-gl-js/issues/6768" target="_blank" rel="noopener">防止过渡渲染</a>， <code>Content-length</code> 为 0 的瓦片资源并不影响整体效果，然而由浏览器抛出的的 404 请求错误却堆积如山。我们可以通过配置 Nginx 将多余的 404 瓦片请求返回状态码 204（<code>no-content</code>）来抑制浏览器本身的报错：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">location ~* /geodata/.*(\.pbf)$&#123;</span><br><span class="line">    log_not_found off;</span><br><span class="line">    gzip off;                                   # 不压缩瓦片资源</span><br><span class="line">    if( !-f $request_filename) &#123; return 204 &#125;   # 当 pbf 文件不存在时返回204</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>另外，在 Mapbox 渲染过程中，除了矢量瓦片数据，还需要相应的样式文件、字体（glyphs）和精灵图片（sprite）。如果想完全离线搭建 Mapbox GL 应用而不是通过 accessToken 访问 Mapbox 服务器，则需要在本地或内网里提供这些可访问资源：</p>
+<ul>
+<li><a href="https://github.com/sabas/genfontgl" target="_blank" rel="noopener">genfontgl</a>：转换 <code>.ttf</code> 字体文件为 <code>.pbf</code> 资源</li>
+<li><a href="https://github.com/mapbox/spritezero-cli" target="_blank" rel="noopener">spritezero-cli</a> &amp; <a href="https://github.com/mapbox/spritezero" target="_blank" rel="noopener">spritezero</a>：生成 Mapbox GL 可用的小图标资源</li>
+</ul>
+<h2 id="Mapbox-配置实践"><a href="#Mapbox-配置实践" class="headerlink" title="Mapbox 配置实践"></a>Mapbox 配置实践</h2><p>在搭建好 Nginx 静态资源服务后，我们便可以在前端 Mapbox 配置中引用刚生成的瓦片切片文件了~在 <code>style</code> 中配置 <code>sources</code> 以矢量形式引用瓦片，以便后续更改样式。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> map = <span class="keyword">new</span> mapboxgl.Map(&#123;</span><br><span class="line">	style: &#123;</span><br><span class="line">		glyphs: <span class="string">`<span class="subst">$&#123;location.origin&#125;</span>/geodata/font/&#123;fontstack&#125;/&#123;range&#125;.pbf`</span>,</span><br><span class="line">		version: <span class="number">8</span>,</span><br><span class="line">		sources: &#123;</span><br><span class="line">			composite: &#123;</span><br><span class="line">				type: <span class="string">'vector'</span>,</span><br><span class="line">				tiles: [<span class="string">`<span class="subst">$&#123;location.origin&#125;</span>/geodata/map/&#123;z&#125;/&#123;x&#125;/&#123;y&#125;.pbf`</span>],</span><br><span class="line">				tileSize: <span class="number">512</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;,</span><br><span class="line">		layers: [</span><br><span class="line">			<span class="comment">/* 独立图层样式配置 */</span></span><br><span class="line">		]</span><br><span class="line">	&#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>在 <code>layers</code> 中我们可以为不同类型的数据独立配置样式，Mapbox 按<strong>图层顺序</strong>绘制。以路网作为一个图层的例子，我们指定数据来源是 <code>composite</code>，并将图层名 <code>source-layer</code> 指向了 <code>road</code>，并通过 <a href="https://www.mapbox.com/mapbox-gl-js/style-spec/#expressions" target="_blank" rel="noopener">Filter Expression</a> 筛选出非路干（primary/secondary）的形状进行样式调整：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">"id"</span>: <span class="string">"road-general"</span>,</span><br><span class="line">    <span class="string">"type"</span>: <span class="string">"line"</span>,</span><br><span class="line">    <span class="string">"source"</span>: <span class="string">"composite"</span>,</span><br><span class="line">    <span class="string">"source-layer"</span>: <span class="string">"road"</span>,</span><br><span class="line">    <span class="string">"filter"</span>: [</span><br><span class="line">        <span class="string">"!in"</span>,</span><br><span class="line">        <span class="string">"type"</span>,</span><br><span class="line">        <span class="string">"primary"</span>,</span><br><span class="line">        <span class="string">"secondary"</span>,</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">"layout"</span>: &#123;</span><br><span class="line">        <span class="string">"line-cap"</span>: <span class="string">"round"</span>,</span><br><span class="line">        <span class="string">"line-join"</span>: <span class="string">"round"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">"paint"</span>: &#123;</span><br><span class="line">        <span class="string">"line-width"</span>: <span class="number">5</span>,</span><br><span class="line">        <span class="string">"line-color"</span>: <span class="string">"#122b3e"</span>,</span><br><span class="line">        <span class="string">"line-opacity"</span>: <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，除了类型为 <code>background</code> 的图层，其他层必须指定一个 <code>source</code>，而当源的类型是矢量瓦片（如 <code>type: &#39;vector&#39;</code>），就必须为图层指定 <code>source-layer</code>。详细配置请参考<a href="https://www.mapbox.com/mapbox-gl-js/style-spec/#sources" target="_blank" rel="noopener">官方文档</a>。</p>
+<h2 id="一点感想"><a href="#一点感想" class="headerlink" title="一点感想"></a>一点感想</h2><p>最初因为需要在内网里展示地区可视化数据，最大的展示面积不超过一个行政市。在技术选型上，使用代理请求 Mapbox 瓦片使得渲染时间太长，对 3-4 人的小型前端团队来说使用专门服务器维护 geoserver 数据库在时间、人力成本上太高，才有搭建静态矢量瓦片服务这个想法。花了一周从一个完全没有接触过 WMS 的小白 到到处搜刮数据 到折腾 QGIS 到各种开源工具生成瓦片，填补了很多知识盲区，同时也打开了更多新世界的大门。瓦片服务是一个涉及了数据库、GIS 等方方面面的领域，每一个新名词都可以深入展开介绍几万字【……这篇文章记录一下搭建离线资源的踩坑历程，当做是进一步入门 webgis 的敲门砖吧~🙈</p>
+<h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
+<li><a href="https://zhuanlan.zhihu.com/c_139752171" target="_blank" rel="noopener">Mapbox GL JS 学习笔记</a></li>
+<li><a href="https://www.mapbox.com/help/how-mapbox-works/" target="_blank" rel="noopener">Mapbox MBTiles 介绍</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/data-visualization/" rel="tag"># data visualization</a>
+          
+            <a href="/tags/mapbox/" rel="tag"># mapbox</a>
+          
+            <a href="/tags/GIS/" rel="tag"># GIS</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/14/generate-3d-map-with-geojson/" rel="next" title="Three.js空间地理可视化：3D行政区域图开发">
+                <i class="fa fa-chevron-left"></i> Three.js空间地理可视化：3D行政区域图开发
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/02/service-worker-in-practice/" rel="prev" title="博客大改造：Service Worker 实践与总结">
+                博客大改造：Service Worker 实践与总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#获取-OSM-数据"><span class="nav-number">1.</span> <span class="nav-text">获取 OSM 数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Geo-数据处理、提取"><span class="nav-number">2.</span> <span class="nav-text">Geo 数据处理、提取</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#人文数据处理"><span class="nav-number">2.1.</span> <span class="nav-text">人文数据处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#海岸线处理"><span class="nav-number">2.2.</span> <span class="nav-text">海岸线处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#其他"><span class="nav-number">2.3.</span> <span class="nav-text">其他</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#搭建矢量瓦片服务"><span class="nav-number">3.</span> <span class="nav-text">搭建矢量瓦片服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mapbox-配置实践"><span class="nav-number">4.</span> <span class="nav-text">Mapbox 配置实践</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#一点感想"><span class="nav-number">5.</span> <span class="nav-text">一点感想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">6.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

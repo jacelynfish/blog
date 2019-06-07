@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="这篇文章并不是前端单测入门介绍  这是一篇流水账最近这两个星期的开发任务比较少，又开始一边写用例一边疯狂踩坑。毕竟项目本身直接上 dva，对 react/redux/redux-saga 的封装度比较高，而且用的也是蚂蚁的 AntD 的组件库，有时候需要测试某个组件的时候需要绕过很多 dva 和 AntD 的实现，导致经常一个组件的三四个用例就能写一个上午，甚至为了解决一些魔性的 warning">
+<meta name="keywords" content="unit-test,react">
+<meta property="og:type" content="article">
+<meta property="og:title" content="踩坑：使用 Jest+Enzyme 对 AntD&#x2F;dva 项目进行单元测试">
+<meta property="og:url" content="https://jacelyn.fish/2018/01/15/jest-enzyme-antd-dva/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="这篇文章并不是前端单测入门介绍  这是一篇流水账最近这两个星期的开发任务比较少，又开始一边写用例一边疯狂踩坑。毕竟项目本身直接上 dva，对 react/redux/redux-saga 的封装度比较高，而且用的也是蚂蚁的 AntD 的组件库，有时候需要测试某个组件的时候需要绕过很多 dva 和 AntD 的实现，导致经常一个组件的三四个用例就能写一个上午，甚至为了解决一些魔性的 warning">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-06-07T12:52:27.586Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="踩坑：使用 Jest+Enzyme 对 AntD&#x2F;dva 项目进行单元测试">
+<meta name="twitter:description" content="这篇文章并不是前端单测入门介绍  这是一篇流水账最近这两个星期的开发任务比较少，又开始一边写用例一边疯狂踩坑。毕竟项目本身直接上 dva，对 react/redux/redux-saga 的封装度比较高，而且用的也是蚂蚁的 AntD 的组件库，有时候需要测试某个组件的时候需要绕过很多 dva 和 AntD 的实现，导致经常一个组件的三四个用例就能写一个上午，甚至为了解决一些魔性的 warning">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2018/01/15/jest-enzyme-antd-dva/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2018/01/15/jest-enzyme-antd-dva/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">踩坑：使用 Jest+Enzyme 对 AntD/dva 项目进行单元测试
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-01-15 13:57:48" itemprop="dateCreated datePublished" datetime="2018-01-15T13:57:48+08:00">2018-01-15</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-07 20:52:27" itemprop="dateModified" datetime="2019-06-07T20:52:27+08:00">2019-06-07</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/JavaScript/" itemprop="url" rel="index"><span itemprop="name">JavaScript</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>这篇文章并不是前端单测入门介绍</p>
+</blockquote>
+<h2 id="这是一篇流水账"><a href="#这是一篇流水账" class="headerlink" title="这是一篇流水账"></a>这是一篇流水账</h2><p>最近这两个星期的开发任务比较少，又开始一边写用例一边疯狂踩坑。毕竟项目本身直接上 <a href="https://github.com/dvajs/dva" target="_blank" rel="noopener">dva</a>，对 react/redux/redux-saga 的封装度比较高，而且用的也是蚂蚁的 <a href="https://ant.design/" target="_blank" rel="noopener">AntD</a> 的组件库，有时候需要测试某个组件的时候需要绕过很多 dva 和 AntD 的实现，导致经常一个组件的三四个用例就能写一个上午，甚至为了解决一些魔性的 warning 去学习了 <a href="https://redux-saga.js.org/" target="_blank" rel="noopener">redux-saga</a> 的原理以及……翻了 dva 的源码【？？？而且 <a href="https://facebook.github.io/jest/" target="_blank" rel="noopener">Jest</a> 和 <a href="http://airbnb.io/enzyme/" target="_blank" rel="noopener">Enzyme</a> 本身也有些 known bug 需要魔改的 work around，所以在搭建整个测试的框架的时候也用上了官方的 <a href="https://reactjs.org/docs/test-utils.html" target="_blank" rel="noopener">Test Utilities</a> 库和 <a href="https://github.com/tmpvar/jsdom" target="_blank" rel="noopener">jsdom</a>。这里就认真记录一下踩到的坑们吧~</p>
+<a id="more"></a>
+<h2 id="坑们"><a href="#坑们" class="headerlink" title="坑们"></a>坑们</h2><h3 id="Jest-的-Mock-全局检测文件名"><a href="#Jest-的-Mock-全局检测文件名" class="headerlink" title="Jest 的 Mock 全局检测文件名"></a>Jest 的 Mock 全局检测文件名</h3><blockquote>
+<p><a href="https://github.com/facebook/jest/issues/2070" target="_blank" rel="noopener">https://github.com/facebook/jest/issues/2070</a></p>
+</blockquote>
+<p>当开启 automock（这是默认行为）的时候，jest 是全局检测所有的 mockfile 的名称，因此即使 mockfile 放在不同的路径下面，如果他们的文件名本身（不包括 path 的 basename）相同，如 <code>a/__mocks__/services.js</code> 和 <code>b/__mocks__/services.js</code>，就会使 Jest 抛出错误，目前这个还是只个 warning，看起来是 Jest 本身的 Manual Mocks 系统仍然不完善，官方并没有给出解决方案，因此我们仍然需要手动引入需要 mock 的文件。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//work around</span></span><br><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> services <span class="keyword">from</span> <span class="string">'../services'</span>;</span><br><span class="line"></span><br><span class="line">jest.disableAutomock();</span><br><span class="line">jest.mock(<span class="string">'../services'</span>, () =&gt; <span class="built_in">require</span>(<span class="string">'../_mocks_/services'</span>));</span><br></pre></td></tr></table></figure>
+<h3 id="组件测试时建立最小的-dva-实例"><a href="#组件测试时建立最小的-dva-实例" class="headerlink" title="组件测试时建立最小的 dva 实例"></a>组件测试时建立最小的 dva 实例</h3><p>在正常开发时，如果一个组件下的 <code>state</code> 和 <code>dispatch</code>是通过 <code>connect()</code> 传入的，dva 已经帮我们完成 router 和 store 的创建，并直接通过 <code>&lt;Provider /&gt;</code> 将 store 传入组件。然而在测试的时候，这样一套的封装流程会使真实需要测试的组件代码在虚拟 DOM 的节点非常深，如果使用 Shallow Rendering，在使用 dva 路由的情况下，可能需要从 <code>wrapper</code> 使用 <code>dive()</code> 进行 3、4 次才能找到需要的组件。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 没有使用路由的情况下，需要 dive 两层才能找到真实组件 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">Component</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Provider</span> <span class="attr">store</span>=<span class="string">&#123;&#123;...&#125;&#125;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">MyButton</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;[Function]&#125;</span>&gt;</span>before click<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">MyButton</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">Provider</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Component</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>于是我们利用 dva 创建 Redux store，在测试时直接渲染组件本身，并将需要的 <code>state</code> 和 <code>dispatch</code> 从 dva 获取后手动传入。(这里的 <code>MyButton</code> 组件是没有被 <code>connect()</code> 包裹的原始组件)</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// work around</span></span><br><span class="line"><span class="comment">// __test__/MyButton.test.js</span></span><br><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; shallow &#125; <span class="keyword">from</span> <span class="string">'enzyme'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; MyButton &#125; <span class="keyword">from</span> <span class="string">'../MyButton'</span>;</span><br><span class="line"><span class="keyword">import</span> model <span class="keyword">from</span> <span class="string">'../myButtonModel'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> wrapper, app;</span><br><span class="line">beforeAll(<span class="function"><span class="params">()</span> =&gt;</span>&#123;</span><br><span class="line">  app = dva()</span><br><span class="line">  app.model(model);</span><br><span class="line">  app.router(<span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;);</span><br><span class="line">  app.start();</span><br><span class="line">  wrapper = mount(<span class="xml"><span class="tag">&lt;<span class="name">MyButton</span> <span class="attr">dispatch</span>=<span class="string">&#123;app._store.dispatch&#125;</span></span></span></span><br><span class="line"><span class="xml">    button=&#123;app._store.getState().button&#125; /&gt;);</span></span><br><span class="line"><span class="xml">&#125;)</span></span><br><span class="line"><span class="xml">afterAll(() =&gt; &#123;</span></span><br><span class="line"><span class="xml">  wrapper.unmount();</span></span><br><span class="line"><span class="xml">&#125;)</span></span><br><span class="line"><span class="xml">// ... test code ...</span></span><br></pre></td></tr></table></figure>
+<p>在 <code>wrapper</code> 上使用 <code>debug()</code> 检视一下组件渲染情况，这样获得的 <code>wrapper</code> 便是 <code>MyButton</code> 组件的 Shallow Wrapper 实例，可以直接在上面进行操作了：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">MyButton</span> <span class="attr">dispatch</span>=<span class="string">&#123;[Function]&#125;</span> <span class="attr">button</span>=<span class="string">&#123;&#123;...&#125;&#125;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">onClick</span>=<span class="string">&#123;[Function]&#125;</span>&gt;</span>before click<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">MyButton</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h3 id="组件内部有监听路由变化的逻辑"><a href="#组件内部有监听路由变化的逻辑" class="headerlink" title="组件内部有监听路由变化的逻辑"></a>组件内部有监听路由变化的逻辑</h3><p>由于需要监听路由变化，组件需要依赖 <code>context</code> 中的 <code>router</code> 属性来获取 <code>history</code> 对象。在一个 dva 实例里，这个 <code>router</code> 是由 dva 创建并加载到根元素的 <code>childContext</code> 里的，根据这点我从最小 dva 实例作为起点，开始了几个尝试：</p>
+<ol>
+<li><p>渲染最小 dva 实例，直接使用 react-router 的 <code>createBrowserHistory()</code> 等方法直接创建一个 <code>router</code> 实例并手动加入组件的 <code>childContext</code> 传给 <code>&lt;Link /&gt;</code> 标签使用。结果：报错。<em>如果组件里面使用了 <code>&lt;Link /&gt;</code> 等 react-router 的标签，就必须把组件包裹在一个 <code>&lt;Router /&gt;</code> 标签里。</em></p>
+</li>
+<li><p>依赖 dva 的 router，创建一个完整的 dva 实例并照常进行测试。结果：模拟对 <code>&lt;Link /&gt;</code> 的点击或是直接使用 <code>app._history.pushState(nextState); app._history.goForward()</code> 均无效。<em>猜测是 <code>&lt;BrowserRouter /&gt;</code> 在非浏览器环境下无法正常运行。</em></p>
+</li>
+<li><p>按照 2 创建完整 dva 实例，将 <code>&lt;BrowserRouter /&gt;</code> 换为 <code>&lt;Router /&gt;</code>，并通过 <code>createMemoryRouter()</code> 创建 router 实例。（其实这里直接使用 <code>&lt;MemoryRouter /&gt;</code>也是可以的，但单独声明 <code>history</code> 能够更灵活地在其他 test case 中操纵路由跳转）结果：成功。</p>
+</li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// work around</span></span><br><span class="line"><span class="comment">// __test__/MyButton.test.js</span></span><br><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; shallow, mount &#125; <span class="keyword">from</span> <span class="string">'enzyme'</span>;</span><br><span class="line"><span class="comment">// 因为直接传入 &lt;Route /&gt; 中，这里的 MyButton 组件</span></span><br><span class="line"><span class="comment">// 已被 withRouter() 以及 connect() 包裹</span></span><br><span class="line"><span class="keyword">import</span> MyButton <span class="keyword">from</span> <span class="string">'../MyButton'</span>;</span><br><span class="line"><span class="keyword">import</span> model <span class="keyword">from</span> <span class="string">'../myButtonModel'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; createMemoryHistory, Router, Route, Switch &#125; <span class="keyword">from</span> <span class="string">'react-router'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> app, wrapper, history;</span><br><span class="line">beforeAll(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  history = createMemoryHistory();</span><br><span class="line">  app = dva();</span><br><span class="line">  app.model(model);</span><br><span class="line">  app.router(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    &lt;Router history=&#123;history&#125;&gt;</span><br><span class="line">      &lt;Switch&gt;</span><br><span class="line">        &lt;Route exact path=<span class="string">"/"</span> component=&#123;MyButton&#125; /&gt;</span><br><span class="line">        &lt;Route path=<span class="string">"/other_path"</span> render=&#123;&lt;div&gt;Other Path&lt;<span class="regexp">/div&gt;&#125;&gt;</span></span><br><span class="line"><span class="regexp">      &lt;/</span>Switch&gt;</span><br><span class="line">    &lt;<span class="regexp">/Router&gt;</span></span><br><span class="line"><span class="regexp">  &#125;)</span></span><br><span class="line"><span class="regexp">  let App = app.start();</span></span><br><span class="line"><span class="regexp">  wrapper = mount(&lt;App /</span>&gt;);</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// ... test code ...</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//myButtonModel.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> &#123;</span><br><span class="line">  namespace: <span class="string">'myButton'</span>,</span><br><span class="line">  state: &#123;&#125;, <span class="attr">reducers</span>: &#123;&#125;, <span class="attr">effects</span>: &#123;&#125;,</span><br><span class="line">  subscriptions: &#123;</span><br><span class="line">    setup(&#123; history, dispatch &#125;) &#123;</span><br><span class="line">      <span class="keyword">return</span> history.listen(<span class="function">(<span class="params">&#123; pathname &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(pathname)</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在测试环境下，通过 subscriptions 可以顺利在实例创建期间使用 <code>history.listen()</code> 监听路由变化了。</p>
+<h3 id="Shallow-Rendering-的几个坑"><a href="#Shallow-Rendering-的几个坑" class="headerlink" title="Shallow Rendering 的几个坑"></a>Shallow Rendering 的几个坑</h3><h4 id="1-Enzyme-的-shallow-渲染的-ref-属性无效"><a href="#1-Enzyme-的-shallow-渲染的-ref-属性无效" class="headerlink" title="1. Enzyme 的 shallow 渲染的 ref 属性无效"></a>1. Enzyme 的 shallow 渲染的 ref 属性无效</h4><blockquote>
+<p><a href="https://github.com/airbnb/enzyme/issues/316" target="_blank" rel="noopener">https://github.com/airbnb/enzyme/issues/316</a></p>
+</blockquote>
+<p>Enzyme 的文档里，在 Shallow Rendering 的章节并没有提及 <code>ref()</code> 函数，在实践中，假设我有一个这样的组件，组件内部靠使用 <code>ref</code> 给父组件传递元素：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// MyButton.js</span></span><br><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">export</span> <span class="class"><span class="keyword">class</span> <span class="title">MyButton</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</span><br><span class="line">    <span class="keyword">constructor</span>(props) &#123;</span><br><span class="line">        <span class="keyword">super</span>(props);</span><br><span class="line">        <span class="keyword">this</span>.state = &#123; <span class="attr">text</span>: <span class="string">'before click'</span> &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    render() &#123;</span><br><span class="line">        <span class="keyword">return</span> (</span><br><span class="line">            &lt;div&gt;</span><br><span class="line">                &lt;button data-text=&#123;<span class="keyword">this</span>.state.text&#125; ref=&#123;<span class="keyword">this</span>.props.wrappedRef&#125;</span><br><span class="line">                    onClick=&#123;() =&gt; &#123; <span class="keyword">this</span>.setState(&#123; <span class="attr">text</span>: <span class="string">'after click'</span> &#125;); &#125;&#125;&gt;</span><br><span class="line">                    &#123;<span class="keyword">this</span>.state.text&#125;&lt;<span class="regexp">/button&gt;</span></span><br><span class="line"><span class="regexp">            &lt;/</span>div&gt;</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果用例中使用 <code>shallow()</code> 来渲染</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> saveBtn = jest.fn(<span class="function"><span class="params">btn</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (btn) btnNd = btn;</span><br><span class="line">&#125;);</span><br><span class="line"><span class="keyword">let</span> wrapper = mount(<span class="xml"><span class="tag">&lt;<span class="name">MyButton</span> <span class="attr">wrappedRef</span>=<span class="string">&#123;saveBtn&#125;</span> /&gt;</span>);</span></span><br></pre></td></tr></table></figure>
+<p>这时候如果检测 <code>btn</code> 会发现它的值是 <code>undefined</code>。然而使用 <code>mount()</code> 能正确获得这个 <code>ref</code> 引用的元素：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// work around</span></span><br><span class="line"><span class="comment">// __test__/MyButton.test.js</span></span><br><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; shallow, mount &#125; <span class="keyword">from</span> <span class="string">'enzyme'</span>;</span><br><span class="line"><span class="keyword">import</span> MyButton <span class="keyword">from</span> <span class="string">'../MyButton'</span>;</span><br><span class="line"></span><br><span class="line">test(<span class="string">'ref test'</span>, () =&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> btnNd;</span><br><span class="line">    <span class="keyword">let</span> saveBtn = jest.fn(<span class="function"><span class="params">btn</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (btn) btnNd = btn;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">let</span> wrapper = mount(<span class="xml"><span class="tag">&lt;<span class="name">MyButton</span> <span class="attr">wrappedRef</span>=<span class="string">&#123;saveBtn&#125;</span> /&gt;</span>);</span></span><br><span class="line"><span class="xml"></span></span><br><span class="line"><span class="xml">    wrapper.find('button').simulate('click');</span></span><br><span class="line"><span class="xml">    expect(btnNd.dataset.text).toBe("after click") // pass</span></span><br><span class="line"><span class="xml">&#125;);</span></span><br></pre></td></tr></table></figure>
+<p>同时，如果是 <a href="https://reactjs.org/docs/uncontrolled-components.html" target="_blank" rel="noopener">Uncontrolled Component</a> 例如有 <code>ref</code> 属性的 <code>&lt;input&gt;</code> 直接在这个 component 上用 <code>simulate</code> 也无法触发模拟事件。如需触发模拟事件，需要将组件渲染至虚拟 DOM 里，并手动编写 DOM 的事件触发代码，如</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// work around</span></span><br><span class="line"><span class="keyword">let</span> input = <span class="built_in">document</span>.getElementById(<span class="string">'my-input'</span>);</span><br><span class="line">input.addEventListener(<span class="string">'keydown'</span>, (e) =&gt; &#123; e.target.value = e.key &#125;);</span><br><span class="line"><span class="keyword">let</span> evnt = <span class="keyword">new</span> KeyboardEvent(<span class="string">'keydown'</span>, &#123; <span class="attr">key</span>: <span class="string">'1'</span>&#125;);</span><br><span class="line">input.dispatchEvent(evnt);</span><br><span class="line"><span class="built_in">console</span>.log(input.value); <span class="comment">// 1</span></span><br></pre></td></tr></table></figure>
+<h4 id="2-Redux-状态更新后视图层不自动更新"><a href="#2-Redux-状态更新后视图层不自动更新" class="headerlink" title="2. Redux 状态更新后视图层不自动更新"></a>2. Redux 状态更新后视图层不自动更新</h4><blockquote>
+<p><a href="https://github.com/airbnb/enzyme/issues/465" target="_blank" rel="noopener">https://github.com/airbnb/enzyme/issues/465</a></p>
+</blockquote>
+<p>如果通过建立最小 dva 实例的方法来创建一个组件的 wrapper，将 Redux 的 state 当做 <code>props</code> 传入一个组件，且通过视图层的交互（如点击一个按钮，在 <code>onClick</code> 的事件处理里更新 state）来更新 Redux store 的状态，在 state 改变之后视图层不会主动重新渲染。之前以为是更新 state 存在异步行为，但是在测试过 <code>setTimeout()</code>, <code>setImmediate()</code> 和 <code>process.nextTick()</code>等方案均无果后，我们发现 <strong>由于 <code>shallow()</code> 不会主动调用 <code>componentWillReceiveProps()</code> 等更新的钩子函数，要更新视图层，需要调用 Enzyme 的 <code>setProps()</code> 函数来触发钩子函数的调用。</strong> 之前不太熟悉 dva 的 API，在每个 test case 前面都加了更新的代码，其实只需在创建 dva 实例时给 <code>onStateChange</code> 钩子加上 handler 就好了~</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">app = dva(&#123;</span><br><span class="line">  onStateChange: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    wrapper &amp;&amp;</span><br><span class="line">    wrapper.setProps(&#123;app._store.getState().button&#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>然而这样只能保证在每个 test case 开始之前组件的视图层都处于最新状态；如果在 test case 里面更新了 Redux 的 state 后需要 assert，那还是要手动调用一次 <code>setProps()</code>。【(/“≡ _ ≡)/~┴┴ 我也觉得这样的写法太脏了，如果小天使们发现有更好的解决方法欢迎在评论里分享呀~】</p>
+<h3 id="自定义的事件的触发"><a href="#自定义的事件的触发" class="headerlink" title="自定义的事件的触发"></a>自定义的事件的触发</h3><p>AntD 的某些组件，例如 Modal 在浅渲染时，组件自带的 Button 会被生成在渲染树很深的节点，无法简便地通过触发目标元素的 <code>onClick</code> 事件来触发 Modal 的 <code>onOk</code>、<code>onCancel</code> 等事件；在使用 Mount Rendering 时，<code>simulate()</code> 无法模拟自定义的事件，例如 AntD Input.Search 上的 <code>onSearch</code> 事件，会抛出以下错误：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">TypeError</span>: ReactWrapper::simulate() event <span class="string">'search'</span> does not exist</span><br></pre></td></tr></table></figure>
+<p>这类无法直接在组件本身触发事件的情况其实不一定要用 <code>simulate</code> 来解决，这些 <code>onSearch</code>, <code>onOk</code> 事件本身也是赋值在组件上的属性，它们的值是普通的回调函数，因此可以直接通过 <code>prop()</code> 来获取并调用。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// work around</span></span><br><span class="line"><span class="keyword">import</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; mount &#125; <span class="keyword">from</span> <span class="string">'enzyme'</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; Input &#125; <span class="keyword">from</span> <span class="string">'antd'</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> wrapper;</span><br><span class="line"><span class="keyword">let</span> searchText = <span class="string">'search text'</span>;</span><br><span class="line"><span class="keyword">let</span> Search = Input.Search;</span><br><span class="line"><span class="keyword">let</span> mockSearch = jest.fn(<span class="function"><span class="params">text</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(text);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">beforeAll(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    wrapper = mount(</span><br><span class="line">        &lt;div&gt;<span class="xml"><span class="tag">&lt;<span class="name">Search</span> <span class="attr">onSearch</span>=<span class="string">&#123;mockSearch&#125;</span> /&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line">    );</span><br><span class="line">&#125;);</span><br><span class="line">afterAll(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">    wrapper.unmount();</span><br><span class="line">&#125;);</span><br><span class="line">test.only(<span class="string">'event test'</span>, () =&gt; &#123;</span><br><span class="line">    wrapper.find(<span class="string">'Search'</span>).prop(<span class="string">'onSearch'</span>)(searchText);</span><br><span class="line">    expect(mockSearch).toBeCalledWith(searchText);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="吐槽"><a href="#吐槽" class="headerlink" title="吐槽"></a>吐槽</h2><p>接触 React 已经两个月了。这两个月里接触了 redux, react-router, redux-saga，以及在项目上大量使用 dva 和 AntD。然而上面的经验都是从实践中得来的，还没来得及去翻看全家桶的源码，从底层明白这些坑是怎么产生的，以至于有时候走了很多弯路。如果今后测试过程中发现了其他值得提及的点，也会来更新哒！(｀ ∀´)Ψ</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/unit-test/" rel="tag"># unit-test</a>
+          
+            <a href="/tags/react/" rel="tag"># react</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/10/run-once-plugin/" rel="next" title="run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载">
+                <i class="fa fa-chevron-left"></i> run-once-plugin原理解析：绕过webpack配置直接操作plugin的加载和卸载
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/14/generate-3d-map-with-geojson/" rel="prev" title="Three.js空间地理可视化：3D行政区域图开发">
+                Three.js空间地理可视化：3D行政区域图开发 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#这是一篇流水账"><span class="nav-number">1.</span> <span class="nav-text">这是一篇流水账</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#坑们"><span class="nav-number">2.</span> <span class="nav-text">坑们</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Jest-的-Mock-全局检测文件名"><span class="nav-number">2.1.</span> <span class="nav-text">Jest 的 Mock 全局检测文件名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组件测试时建立最小的-dva-实例"><span class="nav-number">2.2.</span> <span class="nav-text">组件测试时建立最小的 dva 实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#组件内部有监听路由变化的逻辑"><span class="nav-number">2.3.</span> <span class="nav-text">组件内部有监听路由变化的逻辑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shallow-Rendering-的几个坑"><span class="nav-number">2.4.</span> <span class="nav-text">Shallow Rendering 的几个坑</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Enzyme-的-shallow-渲染的-ref-属性无效"><span class="nav-number">2.4.1.</span> <span class="nav-text">1. Enzyme 的 shallow 渲染的 ref 属性无效</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Redux-状态更新后视图层不自动更新"><span class="nav-number">2.4.2.</span> <span class="nav-text">2. Redux 状态更新后视图层不自动更新</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#自定义的事件的触发"><span class="nav-number">2.5.</span> <span class="nav-text">自定义的事件的触发</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#吐槽"><span class="nav-number">3.</span> <span class="nav-text">吐槽</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
