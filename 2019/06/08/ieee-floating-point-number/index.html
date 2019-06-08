@@ -134,24 +134,30 @@
 <script type="text/javascript" src="/swReg.js"></script>
 
 
-  <meta name="description" content="履历 靳鸿媛 Jacelyn jacely.hyjin@gmail.com 澳门科技大学 2018 届 资讯科技学院 软件技术应用专业 学士  技能 前端开发 熟练使用原生 ES6/HTML/CSS 熟悉 Vue/vuex/vue-router 及 React/Redux/react-router/redux-saga 全家桶 熟练使用 webpack，了解 Node.js, Express, K">
-<meta property="og:type" content="website">
-<meta property="og:title" content="1995">
-<meta property="og:url" content="https://jacelyn.fish/about/resume/index.html">
+  <meta name="description" content="温故而知新。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从计组课到前端深坑：IEEE 754双精度浮点数的那些事">
+<meta property="og:url" content="https://jacelyn.fish/2019/06/08/ieee-floating-point-number/index.html">
 <meta property="og:site_name" content="1995">
-<meta property="og:description" content="履历 靳鸿媛 Jacelyn jacely.hyjin@gmail.com 澳门科技大学 2018 届 资讯科技学院 软件技术应用专业 学士  技能 前端开发 熟练使用原生 ES6/HTML/CSS 熟悉 Vue/vuex/vue-router 及 React/Redux/react-router/redux-saga 全家桶 熟练使用 webpack，了解 Node.js, Express, K">
+<meta property="og:description" content="温故而知新。">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-06-07T12:52:27.587Z">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/concepts.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/double_precision.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/add.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/max_value.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/0.1.png">
+<meta property="og:updated_time" content="2019-06-08T14:38:31.699Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="1995">
-<meta name="twitter:description" content="履历 靳鸿媛 Jacelyn jacely.hyjin@gmail.com 澳门科技大学 2018 届 资讯科技学院 软件技术应用专业 学士  技能 前端开发 熟练使用原生 ES6/HTML/CSS 熟悉 Vue/vuex/vue-router 及 React/Redux/react-router/redux-saga 全家桶 熟练使用 webpack，了解 Node.js, Express, K">
+<meta name="twitter:title" content="从计组课到前端深坑：IEEE 754双精度浮点数的那些事">
+<meta name="twitter:description" content="温故而知新。">
+<meta name="twitter:image" content="https://jacelyn.fish/images/ieee-floating-point-number/concepts.png">
 
 
 
 
 
 
-  <link rel="canonical" href="https://jacelyn.fish/about/resume/">
+  <link rel="canonical" href="https://jacelyn.fish/2019/06/08/ieee-floating-point-number/">
 
 
 
@@ -165,7 +171,7 @@
   
   <script> const IS_OFFLINE = false;</script>
 
-  <title> | 1995</title>
+  <title>从计组课到前端深坑：IEEE 754双精度浮点数的那些事 | 1995</title>
   
 
 
@@ -291,25 +297,6 @@
   
     
 
-    
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-      
-      
-    
-    
-
-  
-
-
   
 
   
@@ -336,130 +323,195 @@
 
   <div id="posts" class="posts-expand">
     
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2019/06/08/ieee-floating-point-number/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
     
-    
-    <div class="post-block page">
       <header class="post-header">
 
-<h1 class="post-title" itemprop="name headline"></h1>
-
-<div class="post-meta">
-  
-  
-
-
-  
-  
-  <ul class="breadcrumb">
-    
-      
-      
         
-          <li><a href="/about/">ABOUT</a></li>
+        
+          <h1 class="post-title" itemprop="name headline">从计组课到前端深坑：IEEE 754双精度浮点数的那些事
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-06-08 00:17:13 / Modified: 22:38:31" itemprop="dateCreated datePublished" datetime="2019-06-08T00:17:13+08:00">2019-06-08</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+
           
             
           
-        
-      
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
     
-      
-      
-        
-          <li>RESUME</li>
-        
-      
+
     
-      
-      
     
-  </ul>
-
-
-</div>
-
-</header>
+    
+    <div class="post-body" itemprop="articleBody">
 
       
       
+
       
-      <div class="post-body">
-        
-        
-          <h3 id="履历"><a href="#履历" class="headerlink" title="履历"></a>履历</h3><ul>
-<li>靳鸿媛 Jacelyn</li>
-<li><a href="mailto:jacely.hyjin@gmail.com" target="_blank" rel="noopener">jacely.hyjin@gmail.com</a></li>
-<li>澳门科技大学 2018 届 资讯科技学院 软件技术应用专业 学士</li>
+        <p>温故而知新。</p>
+<a id="more"></a>
+<h2 id="从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><a href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004" class="headerlink" title="从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004"></a>从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</h2><p>JavaScript 遵循 IEEE 754 规范中的双精度浮点数标准，在内存中使用 64bit 储存 <code>Number</code> 型数据。我们先来复习一下这个规范中的相关内容：<br>如何来表示一个十进制浮点数如6.75呢？</p>
+<p>$$<br>6.75<br>= 4 + 2 + 0.5 + 0.25<br>= 110.11<br>= 2^2 + 2^1 + 2^{-1} + 2^{-2}<br>$$</p>
+<p><img src="/images/ieee-floating-point-number/concepts.png" alt></p>
+<p>双精度浮点数的具体储存格式如下：<br><img src="/images/ieee-floating-point-number/double_precision.png" alt></p>
+<ul>
+<li>最高位是符号位(sign bit) S，0为正，1为负</li>
+<li>指数偏移值部分 E，exponent = E - bias，其中 $bias = 2^{N - 1} - 1 = 1023$</li>
+<li>有效数（significand）的小数部分 M，默认省略了第一个1，则 Mantissa = M + 1。</li>
 </ul>
-<h3 id="技能"><a href="#技能" class="headerlink" title="技能"></a>技能</h3><ul>
-<li>前端开发<ul>
-<li>熟练使用原生 ES6/HTML/CSS</li>
-<li>熟悉 Vue/vuex/vue-router 及 React/Redux/react-router/redux-saga 全家桶</li>
-<li>熟练使用 webpack，了解 Node.js, Express, Koa, Gulp, Sass, PostCss 等前端工程化框架、工具</li>
-<li>掌握 D3.js, Echarts, Three.js 和 Mapbox-gl 等可视化库在 2D/3D 数据可视化中的应用</li>
-</ul>
-</li>
-<li>了解 C++, Java, Python</li>
-<li>Adobe Photoshop, Axure</li>
-</ul>
-<h3 id="经历"><a href="#经历" class="headerlink" title="经历"></a>经历</h3><ul>
-<li><p><code>2017.11 | current</code> <strong>360 企业安全集团</strong> 前端开发工程师</p>
-<p><strong>React 开发</strong> 使用 React/AntDesign/dva 参与开发公司业务平台<br><strong>单元测试</strong> 使用 Jest + Enzyme + Puppeteer 搭建华南研发基地前端项目的单元测试规范，并完成部分测试用例<br><strong>编译优化</strong> 编写 webpack 插件，优化前端编译过程，编译速度提高 30%<br><strong>数据可视化</strong> 参与大屏可视化项目开发，使用 WebGL 框架 Three.js 以及 GLSL Shader 对网络、蠕虫病毒攻击等数据实现 3D 地理空间可视化；本地化 Mapbox 瓦片资源，大大降低大屏首屏加载时长；使用 Echarts 和 D3.js 开发数据看板图表</p>
-</li>
-<li><p><code>2017.06 | 2017.09</code> <strong>北京格灵深瞳信息技术有限公司</strong> 前端开发实习生</p>
-<p><strong>数据可视化</strong> 使用 Canvas+SVG+D3.js 绘制用户足迹视图、上下班时间统计等动态图表<br><strong>Node 中间件开发</strong> 使用 Koa2 开发 Node 端用户账号验证和后端数据的预处理等中间件<br><strong>产品调试部署</strong> 使用 Docker 和 PM2 进行项目服务器的云端部署<br><strong>WebSocket 开发</strong> 使用 WebRTC 接口 + Canvas 获取用户设备视频流进行视频截图，并使用 WebSocket 实时获得后端数据</p>
-</li>
-</ul>
-<h3 id="开源"><a href="#开源" class="headerlink" title="开源"></a>开源</h3><ul>
-<li><strong><a href="https://github.com/jacelynfish/run-once-plugin" target="_blank" rel="noopener">run-once-plugin</a></strong> 使指定插件仅运行一次的 webpack 插件</li>
-<li><strong><a href="https://github.com/jacelynfish/react-suite-template" target="_blank" rel="noopener">react-suite-template</a></strong> 基于 vue-cli 的 redux 项目模板，整合了 react-router，支持模块及 redux store 的懒加载及开发环境下的热更新</li>
-<li><strong><a href="https://github.com/jacelynfish/DearResume" target="_blank" rel="noopener">DearResume</a></strong> 使用 Vue 开发的简历生成 SPA，支持 PDF 导出，使用 Sass + CSS Sprites 减少小图标网络请求</li>
-<li><strong><a href="https://github.com/jacelynfish/OS_Process_Scheduler" target="_blank" rel="noopener">OS_Process_Scheduler</a></strong> 使用 Vue+Node.js 开发的操作系统进程调度算法模拟应用</li>
+<p>根据以上公式，我们可以从储存格式中直接得出该浮点数的十进制值：<br>$$(–1)^S \times 2^{E – bias} \times (M + 1)$$</p>
+<p>我们来做个实验，借助<a href="http://bartaz.github.io/ieee754-visualization/" target="_blank" rel="noopener">IEEE 754 双精度浮点数可视化</a>工具，依然以浏览器返回 0.1+0.2 的结果为例，0.30000000000000004 的 M 部分 是由内存中 0.1 的 M 部分与 0.2 的 M 部分进行二进制相加。</p>
+<p><img src="/images/ieee-floating-point-number/add.png" alt></p>
+<p>由于大部分浮点数并不能精确地在计算机系统中储存，运算时每一步的微小误差最终导致了结果明显的偏差。<strong>浮点数的精度丢失在每一个表达式，而不仅仅是表达式的求值结果。</strong> </p>
+<h2 id="Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE"><a href="#Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE" class="headerlink" title="Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE"></a>Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE</h2><p>在 JavaScript 中，无论是整数或者浮点数都是使用 <code>Number</code> 类储存，遵循 IEEE 754 规范中的双精度浮点数标准，因此一共可使用的 Mantissa 位数 = (M + 1) = 53，可表示的整数范围为 $-(2 ^ {53} - 1)$ ~ $2 ^ {53} - 1$，在 <code>Number</code> 类中 <code>Number.MIN_SAFE_INTEGER</code> 为 $-(2 ^ {53} - 1)$ 即 -9007199254740991，<code>Number.MAX_SAFE_INTEGER</code> 为 $2 ^ {53} - 1$ 即 9007199254740991。</p>
+<p>那么 <code>Number.MAX_VALUE</code> 表示的值又是怎么的出来的呢？在标准中，需要指出特殊值：如果指数 = $2^{E}-1$ 并且尾数的小数部分是0，这个数是±∞（和符号位相关）。也就是说可表示最大浮点数数的二进制表现是指数 = $2^{E}-2$，小数部分 = $2^{M}-1$，转为十进制则为 1.7976931348623157e+308</p>
+<p><img src="/images/ieee-floating-point-number/max_value.png" alt></p>
+<h2 id="JS表示的有理数究竟有多少位有效数字？"><a href="#JS表示的有理数究竟有多少位有效数字？" class="headerlink" title="JS表示的有理数究竟有多少位有效数字？"></a>JS表示的有理数究竟有多少位有效数字？</h2><p>在前面我们看到了JS最大精确（安全）整数有16位有效数字，有些小伙伴就认为“JS 最多能表示的精度就是16位”，这样的说法是不准确的，因为在浏览器控制台里， <code>0.1 + 0.2</code> 显示 0.30000000000000004, 小数点后却有17位；我们再来看一些其他随机的例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">100.27 * 0.41 = 41.110699999999994  // 17位有效数字</span><br><span class="line">0.95 * 1 / 3 = 0.31666666666666665  // 17位有效数字</span><br><span class="line">300.73 - 300 = 0.7300000000000182   // 16位有效数字</span><br></pre></td></tr></table></figure></p>
+<p>事实上以上例子打印出的结果均是真实算数结果的近似值，然而却有不同的有效数字位；在浏览器控制台里输入 0.1 ，而我们也明白这个不是精确的值，而控制台依然显示的是 0.1，不显示 0.10000000000000001。很明显，在控制台输出的浮点数近似值都是经过一定的规则来截断的。同时这种表现不仅限于 JS，大家可以在 Terminal 中尝试一下，所有采用 IEEE 754 双精度浮点数标准的语言如 Node 和 Python 都有同样的表现。这就引出了这篇文章最初诞生的原因，源于小伙伴在群里提了这样一个问题：<strong>IEEE 754是按照什么规则来实现双精度浮点数的截断的？</strong></p>
+<p>在 IEEE 754 规范的Wiki页面里看到对浮点数和十进制字符串转换的描述有这么一段</p>
+<blockquote>
+<p>The standard requires operations to convert between basic formats and external character sequence formats. Conversions to and from a decimal character format are required for all formats. <strong>Conversion to an external character sequence must be such that conversion back using round to even will recover the original number.</strong> There is no requirement to preserve the payload of a NaN or signaling NaN, and conversion from the external character sequence may turn a signaling NaN into a quiet NaN. <strong>The original binary value will be preserved by converting to decimal and back again using 17 decimal digits for binary64</strong>.</p>
+</blockquote>
+<p>IEEE 754 规定，浮点数被转成十进制数字字符串，当这个字符串（使用 Round to Even 向偶舍入）转回浮点数时，必须要跟原来的数相同。对双精度浮点数来说，十进制字符串使用17位有效数字即可保存原始二进制值。</p>
+<p>我们来做个实验，以 0.1 为例，它在内存中的二进制表示实际上可以计算为</p>
+<p><img src="/images/ieee-floating-point-number/0.1.png" alt></p>
+<p>$$<br>0.1<br>    = (-1)^0 \times 2^{1019 - 1023} \times (1 + 2^{-1} + 2^{-4} + 2^{-5} + 2^{-8} + 2^{-9} + 2^{-12} + 2^{-13} + 2^{-16} + 2^{-17} + 2^{-20} + 2^{-21} + 2^{-24} + 2^{-25} + 2^{-28} + 2^{-29} + 2^{-32} + 2^{-33} + 2^{-36} + 2^{-37} + 2^{-40} + 2^{-41} + 2^{-44} + 2^{-45} + 2^{-48} + 2^{-49} + 2^{-51})<br>    = 0.1000000000000000055511151231257827021181583404541015625<br>$$</p>
+<p>当我们获取它的17位(经过舍入的)有效数为 0.10000000000000001，那为什么控制台不显示 0.10000000000000001 而显示 0.1？事实上，有许多不同的十进制数共享相同的最接近的近似二进制小数，在这个例子里，0.1、 0.10000000000000001、 0.1000000000000000055511151231257827021181583404541015625 分别在内存中的 64bit 都是完全相同的，在大多数系统上现在能够选择这些表示中最短的来展示，也就是0.1。因此可以推断出：截断判断的依据是截断后的数在console里打印成字符串，这个字符串再转回浮点数后，是否还是同一个数。</p>
+<p><strong>说人话就是：而console里打印出来的，就是可以表示这个浮点数的最短的字符串！</strong></p>
+<p>这就解释了为啥console里有些浮点数的计算得出17位有效位，有些只有16位，有些直接显示自己本身。</p>
+<h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
+<li><a href="https://zh.wikipedia.org/wiki/IEEE_754" target="_blank" rel="noopener">Wikipedia - IEEE 754</a></li>
+<li><a href="https://blog.csdn.net/qq_16097611/article/details/52373936" target="_blank" rel="noopener">IEEE 754 Round to nearest, ties to even 的计算方法</a></li>
 </ul>
 
-        
-      </div>
-      
-      
       
     </div>
+
     
 
-
-  
-  
-  <ul class="breadcrumb">
     
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
       
       
-        
-          <li><a href="/about/">ABOUT</a></li>
-          
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-          
-        
+              <a href="/2019/01/01/2018-in-restrospect/" rel="next" title="2018 in Restrospect">
+                <i class="fa fa-chevron-left"></i> 2018 in Restrospect
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
       
-    
+
       
       
-        
-          <li>RESUME</li>
-        
-      
-    
-      
-      
-    
-  </ul>
+    </footer>
+  </div>
+  
+  
+  
+  </article>
 
 
-    
-    
-    
   </div>
 
 
           </div>
           
+
+  
+
+
 
         </div>
         
@@ -633,7 +685,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#履历"><span class="nav-number">1.</span> <span class="nav-text">履历</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#技能"><span class="nav-number">2.</span> <span class="nav-text">技能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#经历"><span class="nav-number">3.</span> <span class="nav-text">经历</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开源"><span class="nav-number">4.</span> <span class="nav-text">开源</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><span class="nav-number">1.</span> <span class="nav-text">从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE"><span class="nav-number">2.</span> <span class="nav-text">Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JS表示的有理数究竟有多少位有效数字？"><span class="nav-number">3.</span> <span class="nav-text">JS表示的有理数究竟有多少位有效数字？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">4.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
             
 
           </div>

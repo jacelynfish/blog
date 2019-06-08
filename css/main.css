@@ -1853,7 +1853,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #12e542;
+  background: #0aa4b0;
 }
 .links-of-blogroll {
   font-size: 13px;
@@ -2590,6 +2590,10 @@ embed {
 }
 .links-of-blogroll-inline .links-of-blogroll-item {
   display: inline-block;
+}
+.has-jax {
+  width: 100%;
+  overflow-y: auto;
 }
 .site-author {
   margin: 32px 0;
