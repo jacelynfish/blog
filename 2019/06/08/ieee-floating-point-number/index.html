@@ -145,8 +145,10 @@
 <meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/double_precision.png">
 <meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/add.png">
 <meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/max_value.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/overflow.png">
+<meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/distribution_of_floating_point.jpeg">
 <meta property="og:image" content="https://jacelyn.fish/images/ieee-floating-point-number/0.1.png">
-<meta property="og:updated_time" content="2019-06-08T14:38:31.699Z">
+<meta property="og:updated_time" content="2019-06-08T19:09:21.772Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="从计组课到前端深坑：IEEE 754双精度浮点数的那些事">
 <meta name="twitter:description" content="温故而知新。">
@@ -379,12 +381,24 @@
                 
               
 
-              <time title="Created: 2019-06-08 00:17:13 / Modified: 22:38:31" itemprop="dateCreated datePublished" datetime="2019-06-08T00:17:13+08:00">2019-06-08</time>
+              <time title="Created: 2019-06-08 00:17:13" itemprop="dateCreated datePublished" datetime="2019-06-08T00:17:13+08:00">2019-06-08</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-06-09 03:09:21" itemprop="dateModified" datetime="2019-06-09T03:09:21+08:00">2019-06-09</time>
               
             
           </span>
@@ -419,22 +433,34 @@
       
         <p>温故而知新。</p>
 <a id="more"></a>
-<h2 id="从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><a href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004" class="headerlink" title="从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004"></a>从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</h2><p>JavaScript 遵循 IEEE 754 规范中的双精度浮点数标准，在内存中使用 64bit 储存 <code>Number</code> 型数据。我们先来复习一下这个规范中的相关内容：<br>如何来表示一个十进制浮点数如6.75呢？</p>
-<p>$$<br>6.75<br>= 4 + 2 + 0.5 + 0.25<br>= 110.11<br>= 2^2 + 2^1 + 2^{-1} + 2^{-2}<br>$$</p>
-<p><img src="/images/ieee-floating-point-number/concepts.png" alt></p>
+<h2 id="从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><a href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004" class="headerlink" title="从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004"></a>从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</h2><p>JavaScript 遵循 IEEE 754 规范中的双精度浮点数标准，在内存中使用 64bit 储存 <code>Number</code> 型数据，这样的存储结构优点是可以归一化处理整数和小数，节省存储空间。我们先来复习一下这个规范中的相关内容：</p>
+<h3 id="计组课-Recap"><a href="#计组课-Recap" class="headerlink" title="计组课 Recap"></a>计组课 Recap</h3><p><img src="/images/ieee-floating-point-number/concepts.png" alt></p>
+<p>因为双精度浮点数涉及的都是二进制的运算，用二进制科学计数法表示浮点数。其中<strong>尾数 Mantissa</strong>也称有效数位，即对表达结果的精确程度产生重要影响的数。因使用了科学计数法，表达式实数部分永远等于1，意味着在双精度浮点数的表示里可以舍掉这一位，只保留后面的小数部分，换取更大的精度。</p>
 <p>双精度浮点数的具体储存格式如下：<br><img src="/images/ieee-floating-point-number/double_precision.png" alt></p>
 <ul>
 <li>最高位是符号位(sign bit) S，0为正，1为负</li>
 <li>指数偏移值部分 E，exponent = E - bias，其中 $bias = 2^{N - 1} - 1 = 1023$</li>
-<li>有效数（significand）的小数部分 M，默认省略了第一个1，则 Mantissa = M + 1。</li>
+<li>有效数（significand）的小数部分 M，默认省略了科学计数法实数部分的1，则 Mantissa = M + 1。</li>
 </ul>
 <p>根据以上公式，我们可以从储存格式中直接得出该浮点数的十进制值：<br>$$(–1)^S \times 2^{E – bias} \times (M + 1)$$</p>
+<p>那么我们如何来表示一个十进制浮点数如6.75呢？</p>
+<p>$$<br>6.75<br>= 4 + 2 + 0.5 + 0.25<br>= 2^2 + 2^1 + 2^{-1} + 2^{-2}<br>= 110.11_2<br>= +1.1011_2 \times 2^2<br>$$</p>
+<p>由上可得，符号 S = 0，E = exponent + bias = 2 + 1023 = 1025 = $100000000001_2$ , M = $1.1011_2$ - 1 = $.1011_2$ 在系统中二进制储存为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0 100000000001 1011000000000000000000000000000000000000000000000000</span><br></pre></td></tr></table></figure></p>
+<h3 id="0-30000000000000004"><a href="#0-30000000000000004" class="headerlink" title="0.30000000000000004"></a>0.30000000000000004</h3><p>俗话说得好，罗马不是一天建成的。由于64位精度限制，十进制中绝大部分的浮点数无法精确在遵循 IEEE 754 双精度浮点数标准下的平台储存。一旦储存过程发生了精度缺失，运算的过程中每一步的微小误不断积累，由近似值表示产生的四则运算也就无法保证正确的答案了。</p>
 <p>我们来做个实验，借助<a href="http://bartaz.github.io/ieee754-visualization/" target="_blank" rel="noopener">IEEE 754 双精度浮点数可视化</a>工具，依然以浏览器返回 0.1+0.2 的结果为例，0.30000000000000004 的 M 部分 是由内存中 0.1 的 M 部分与 0.2 的 M 部分进行二进制相加。</p>
 <p><img src="/images/ieee-floating-point-number/add.png" alt></p>
-<p>由于大部分浮点数并不能精确地在计算机系统中储存，运算时每一步的微小误差最终导致了结果明显的偏差。<strong>浮点数的精度丢失在每一个表达式，而不仅仅是表达式的求值结果。</strong> </p>
+<p><strong>浮点数的精度丢失在每一个表达式，而不仅仅是表达式的求值结果。</strong> </p>
 <h2 id="Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE"><a href="#Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE" class="headerlink" title="Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE"></a>Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE</h2><p>在 JavaScript 中，无论是整数或者浮点数都是使用 <code>Number</code> 类储存，遵循 IEEE 754 规范中的双精度浮点数标准，因此一共可使用的 Mantissa 位数 = (M + 1) = 53，可表示的整数范围为 $-(2 ^ {53} - 1)$ ~ $2 ^ {53} - 1$，在 <code>Number</code> 类中 <code>Number.MIN_SAFE_INTEGER</code> 为 $-(2 ^ {53} - 1)$ 即 -9007199254740991，<code>Number.MAX_SAFE_INTEGER</code> 为 $2 ^ {53} - 1$ 即 9007199254740991。</p>
 <p>那么 <code>Number.MAX_VALUE</code> 表示的值又是怎么的出来的呢？在标准中，需要指出特殊值：如果指数 = $2^{E}-1$ 并且尾数的小数部分是0，这个数是±∞（和符号位相关）。也就是说可表示最大浮点数数的二进制表现是指数 = $2^{E}-2$，小数部分 = $2^{M}-1$，转为十进制则为 1.7976931348623157e+308</p>
 <p><img src="/images/ieee-floating-point-number/max_value.png" alt></p>
+<p>那么，使用超过 <code>Number.MAX_SAFE_INTEGER</code> 的数会发生什么呢？</p>
+<h3 id="大数危机"><a href="#大数危机" class="headerlink" title="大数危机"></a>大数危机</h3><p>涉及到超过 <code>Number.MAX_SAFE_INTEGER</code> 的运算如 $2 ^ {53} + 4$、<br>$2 ^ {60}$，得到的结果在系统中已经无法用52位有效数表示了，可表示的整数发生了溢出。我们以 9007199254740994 为例：</p>
+<p><img src="/images/ieee-floating-point-number/overflow.png" alt></p>
+<p>尾数发生溢出后，需要使用 53 位有效数表示科学计数法的小数位，则 E = exponent + bias = 53 + 1023 = 1076 = $10000110100_2$，而 M 因为发生了溢出，最后一位被截断，在有效数的表示中少了最后一位<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 本应展示的 M </span></span><br><span class="line"><span class="number">00000000000000000000000000000000000000000000000000010</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 发生溢出后被截断的 M</span></span><br><span class="line"><span class="number">0000000000000000000000000000000000000000000000000001</span></span><br></pre></td></tr></table></figure></p>
+<p>因此，系统无法展现最后一位为1的数字（所有大于$2 ^ {53}$奇数），如：<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Math</span>.pow(<span class="number">2</span>, <span class="number">53</span>) + <span class="number">1</span>     <span class="comment">// 9007199254740992</span></span><br><span class="line"><span class="built_in">Math</span>.pow(<span class="number">2</span>, <span class="number">53</span>) + <span class="number">2</span>     <span class="comment">// 9007199254740994</span></span><br><span class="line"><span class="built_in">Math</span>.pow(<span class="number">2</span>, <span class="number">53</span>) + <span class="number">3</span>     <span class="comment">// 9007199254740996</span></span><br><span class="line"><span class="built_in">Math</span>.pow(<span class="number">2</span>, <span class="number">53</span>) + <span class="number">4</span>     <span class="comment">// 9007199254740996</span></span><br></pre></td></tr></table></figure></p>
+<p>同理，使用大于 <code>Number.MAX_SAFE_INTEGER</code> 的数时，当2的指数为 $N (N \geq 53)$，有效数的表示就截断 $N - 53 + 1$ 位，此时只能表达 $2^{N - 53 + 1}$ 的倍数。IEEE 754 双精度浮点数中可表示的浮点数是实数集的子集，下图很好地表示了他们之间的关系，量级越大，可表示的浮点数越少：</p>
+<p><img src="/images/ieee-floating-point-number/distribution_of_floating_point.jpeg" alt></p>
+<p>因此，当日常业务中涉及了大数时，我们尽量使用类似 <a href="https://github.com/MikeMcl/bignumber.js/" target="_blank" rel="noopener">bignumber.js</a> 这样的类库来处理。截至19年4月，JavaScript 中关于原生 <code>BigInt</code> 类的提案已进入了 Stage 3，Chrome 67 和 Firefox 68 以上版本已支持，在工程中可使用 <a href="https://www.npmjs.com/package/@babel/plugin-syntax-bigint" target="_blank" rel="noopener">@babel/plugin-syntax-bigint</a> 插件进行语法兼容。</p>
 <h2 id="JS表示的有理数究竟有多少位有效数字？"><a href="#JS表示的有理数究竟有多少位有效数字？" class="headerlink" title="JS表示的有理数究竟有多少位有效数字？"></a>JS表示的有理数究竟有多少位有效数字？</h2><p>在前面我们看到了JS最大精确（安全）整数有16位有效数字，有些小伙伴就认为“JS 最多能表示的精度就是16位”，这样的说法是不准确的，因为在浏览器控制台里， <code>0.1 + 0.2</code> 显示 0.30000000000000004, 小数点后却有17位；我们再来看一些其他随机的例子：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">100.27 * 0.41 = 41.110699999999994  // 17位有效数字</span><br><span class="line">0.95 * 1 / 3 = 0.31666666666666665  // 17位有效数字</span><br><span class="line">300.73 - 300 = 0.7300000000000182   // 16位有效数字</span><br></pre></td></tr></table></figure></p>
 <p>事实上以上例子打印出的结果均是真实算数结果的近似值，然而却有不同的有效数字位；在浏览器控制台里输入 0.1 ，而我们也明白这个不是精确的值，而控制台依然显示的是 0.1，不显示 0.10000000000000001。很明显，在控制台输出的浮点数近似值都是经过一定的规则来截断的。同时这种表现不仅限于 JS，大家可以在 Terminal 中尝试一下，所有采用 IEEE 754 双精度浮点数标准的语言如 Node 和 Python 都有同样的表现。这就引出了这篇文章最初诞生的原因，源于小伙伴在群里提了这样一个问题：<strong>IEEE 754是按照什么规则来实现双精度浮点数的截断的？</strong></p>
 <p>在 IEEE 754 规范的Wiki页面里看到对浮点数和十进制字符串转换的描述有这么一段</p>
@@ -450,6 +476,8 @@
 <p>这就解释了为啥console里有些浮点数的计算得出17位有效位，有些只有16位，有些直接显示自己本身。</p>
 <h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
 <li><a href="https://zh.wikipedia.org/wiki/IEEE_754" target="_blank" rel="noopener">Wikipedia - IEEE 754</a></li>
+<li><a href="https://github.com/camsong/blog/issues/9" target="_blank" rel="noopener">JavaScript 浮点数陷阱及解法</a></li>
+<li><a href="http://bartaz.github.io/ieee754-visualization/" target="_blank" rel="noopener">IEEE 754可视化</a></li>
 <li><a href="https://blog.csdn.net/qq_16097611/article/details/52373936" target="_blank" rel="noopener">IEEE 754 Round to nearest, ties to even 的计算方法</a></li>
 </ul>
 
@@ -685,7 +713,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><span class="nav-number">1.</span> <span class="nav-text">从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE"><span class="nav-number">2.</span> <span class="nav-text">Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JS表示的有理数究竟有多少位有效数字？"><span class="nav-number">3.</span> <span class="nav-text">JS表示的有理数究竟有多少位有效数字？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">4.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#从-IEEE-754-标准说到经典的-0-1-0-2-0-30000000000000004"><span class="nav-number">1.</span> <span class="nav-text">从 IEEE 754 标准说到经典的 0.1 + 0.2 = 0.30000000000000004</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#计组课-Recap"><span class="nav-number">1.1.</span> <span class="nav-text">计组课 Recap</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0-30000000000000004"><span class="nav-number">1.2.</span> <span class="nav-text">0.30000000000000004</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Number-MAX-SAFE-INTEGER-amp-Number-MAX-VALUE"><span class="nav-number">2.</span> <span class="nav-text">Number.MAX_SAFE_INTEGER &amp; Number.MAX_VALUE</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#大数危机"><span class="nav-number">2.1.</span> <span class="nav-text">大数危机</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JS表示的有理数究竟有多少位有效数字？"><span class="nav-number">3.</span> <span class="nav-text">JS表示的有理数究竟有多少位有效数字？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">4.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
             
 
           </div>
