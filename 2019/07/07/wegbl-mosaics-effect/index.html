@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+<link href="https://fonts.gstatic.com/s/amaticsc/v11/TUZyzwprpvBS1izr_vOECuSfU5cP1Q.woff2" rel="preload" as="font" crossorigin="anonymous">
+<link href="/lib/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" rel="preload" as="font" crossorigin>
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="preload" as="style">
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+<link href="/css/main.css?v=6.4.2" rel="preload" as="style">
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+<script type="text/javascript" src="/swReg.js"></script>
+
+
+  <meta name="description" content="前言马赛克效果可以说是是我们日常生活中最常用的效果了。之前复习 WebGL 纹理和各种参数的意义的时候突然发现使用不同的 texParameter 能生成马赛克效果，结合之前在 The Book of Shaders 中学习随机效果时总结的坐标分区生成重复纹理的经验，总结出两个在 WebGL 中实现马赛克效果，以本文作下笔记。">
+<meta name="keywords" content="webgl,javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WebGL 实现图片简易马赛克滤镜">
+<meta property="og:url" content="https://jacelyn.fish/2019/07/07/wegbl-mosaics-effect/index.html">
+<meta property="og:site_name" content="1995">
+<meta property="og:description" content="前言马赛克效果可以说是是我们日常生活中最常用的效果了。之前复习 WebGL 纹理和各种参数的意义的时候突然发现使用不同的 texParameter 能生成马赛克效果，结合之前在 The Book of Shaders 中学习随机效果时总结的坐标分区生成重复纹理的经验，总结出两个在 WebGL 中实现马赛克效果，以本文作下笔记。">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://jacelyn.fish/images/webgl-mosaics-effect/mipmap_level.png">
+<meta property="og:image" content="https://jacelyn.fish/images/webgl-mosaics-effect/extlod_demo.gif">
+<meta property="og:image" content="https://jacelyn.fish/images/webgl-mosaics-effect/texCoord_map.png">
+<meta property="og:image" content="https://jacelyn.fish/images/webgl-mosaics-effect/glsl_demo.gif">
+<meta property="og:updated_time" content="2019-07-08T09:57:33.374Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="WebGL 实现图片简易马赛克滤镜">
+<meta name="twitter:description" content="前言马赛克效果可以说是是我们日常生活中最常用的效果了。之前复习 WebGL 纹理和各种参数的意义的时候突然发现使用不同的 texParameter 能生成马赛克效果，结合之前在 The Book of Shaders 中学习随机效果时总结的坐标分区生成重复纹理的经验，总结出两个在 WebGL 中实现马赛克效果，以本文作下笔记。">
+<meta name="twitter:image" content="https://jacelyn.fish/images/webgl-mosaics-effect/mipmap_level.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://jacelyn.fish/2019/07/07/wegbl-mosaics-effect/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  
+  
+  <script> const IS_OFFLINE = false;</script>
+
+  <title>WebGL 实现图片简易马赛克滤镜 | 1995</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    
+    
+    <header id="header" class="header " itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1995</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+    
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+    
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jacelyn.fish/2019/07/07/wegbl-mosaics-effect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Jacelyn Jin">
+      <meta itemprop="description" content="Nolite te Bastardes Carborundorum">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1995">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">WebGL 实现图片简易马赛克滤镜
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2019-07-07 19:18:59" itemprop="dateCreated datePublished" datetime="2019-07-07T19:18:59+08:00">2019-07-07</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2019-07-08 17:57:33" itemprop="dateModified" datetime="2019-07-08T17:57:33+08:00">2019-07-08</time>
+              
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>马赛克效果可以说是是我们日常生活中最常用的效果了。之前复习 WebGL 纹理和各种参数的意义的时候突然发现使用不同的 <code>texParameter</code> 能生成马赛克效果，结合之前在 <a href="https://thebookofshaders.com/10/" target="_blank" rel="noopener">The Book of Shaders</a> 中学习随机效果时总结的坐标分区生成重复纹理的经验，总结出两个在 WebGL 中实现马赛克效果，以本文作下笔记。</p>
+<a id="more"></a>
+<p>我们首先来看看这两个效果的 Demo：</p>
+<iframe src="https://codesandbox.io/embed/webgl-mosaics-5uzul?autoresize=1&fontsize=14&hidenavigation=1&view=preview" title="WebGL Mosaics" allow="geolocation; microphone; camera; midi; vr; accelerometer; gyroscope; payment; ambient-light-sensor; encrypted-media" style="width:100%; height:440px; border:0; border-radius: 4px; overflow:hidden;" sandbox="allow-modals allow-forms allow-popups allow-scripts allow-same-origin"></iframe>
+
+<h2 id="使用扩展-EXT-shader-texture-lod"><a href="#使用扩展-EXT-shader-texture-lod" class="headerlink" title="使用扩展 EXT_shader_texture_lod"></a>使用扩展 <code>EXT_shader_texture_lod</code></h2><p>在 WebGL 中，使用纹理材质可以说是最常用的操作了。在使用静态图片构造 <code>Texture</code> 的过程中，我们常使用 <code>gl.texParameteri()</code> 配置不同的参数，以适配图片被构造成纹理时不可避免的缩放、拉伸或平铺等场景。尤其在缩小图像时，需要按照采样密度选择一定数量的像素进行计算获得最终的像素颜色，为了平衡采样计算的开销和最终呈现效果，我们通过生成 MIPMAP 的方式，在创建纹理的过程中同时生成不同等级的 MIPMAP，提供给后续缩放的采样过程，避免渲染时不必要的重复运算。</p>
+<p>需要注意的是，只有当源纹理的宽/高均为 2 的幂次方时才可以生成 MIPMAP。如下图所示，生成的 MIPMAP 层级越高，像素越低，<strong>通常每个子图都是前一级的双线性插值</strong>；假设源纹理像素为 512 * 512，第 N 层的面积为 ${512 \times 512} / 2 ^ {2N}$</p>
+<p><img src="/images/webgl-mosaics-effect/mipmap_level.png" alt></p>
+<p><code>gl.TEXTURE_MIN_FILTER</code> 支持以下几种参数：</p>
+<ul>
+<li>NEAREST_MIPMAP_NEAREST</li>
+<li>NEAREST_MIPMAP_LINEAR</li>
+<li>LINEAR_MIPMAP_NEAREST</li>
+<li>LINEAR_MIPMAP_LINEAR</li>
+</ul>
+<p>它们都是通过选择多个像素、多层 MIPMAP 进行内插计算出最终像素颜色。从 MIPMAP 中的哪一级纹理取色，取决于在此纹理上采样的密度（当前图案的缩放程度）。此时 <code>EXT_shader_texture_lod</code> 就出场啦~</p>
+<p><code>EXT_shader_texture_lod</code> 扩展是 WebGL API 的一部分（LOD：Level of Detail），可以让开发者精准地选择需要使用的 MIPMAP 层为纹理进行取色。WebGL2 将会默认支持该扩展的功能，不需要额外开启。WebGL1 使用方法如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在 js 中开启扩展</span></span><br><span class="line">gl.getExtension(<span class="string">'EXT_shader_texture_lod'</span>);</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在片元着色器中加入 #extension 宏</span></span><br><span class="line"><span class="meta">#extension GL_EXT_shader_texture_lod: enable</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 texture2DLodEXT() 注明需要采用的 MIPMAP 层数</span></span><br><span class="line">gl_FragColor = texture2DLodEXT(uTexture, st, uExtLodLevel);</span><br></pre></td></tr></table></figure>
+<p>利用 <code>EXT_shader_texture_lod</code> 能随意选择 MIPMAP 层的特点，指定的层数越高，采样的密度越低，获得的像素颜色越偏离原图像的颜色，所得的纹理越是失真。同时，<code>gl.NEAREST_MIPMAP_NEAREST</code> 与 <code>gl.NEAREST_MIPMAP_LINEAR</code> 均从获得 MIPMAP 层中选择<strong>一个最佳像素</strong>作为结果（区别于 <code>gl.LINEAR_MIPMAP_XXX</code> 参数从获得 MIPMAP 层各自再挑选4个像素进行融合），离散的结果也形成了马赛克效果。具体可以参考以下例子，可以发现选择 MIPMAP 层越高，马赛克的像素点越大：</p>
+<p><img src="/images/webgl-mosaics-effect/extlod_demo.gif" alt></p>
+<h2 id="GLSL-Shader-实现"><a href="#GLSL-Shader-实现" class="headerlink" title="GLSL Shader 实现"></a>GLSL Shader 实现</h2><p>参考 <code>EXT_shader_texture_lod</code> 的思路，马赛克的格子样式是由<strong>采样</strong>产生的：某一区域的颜色是<strong>该区域当前像素位置</strong>和<strong>该区域原纹理的颜色</strong>共同决定的。于是我们便可以通过变换纹理坐标 <code>a_texCoord</code> 将某一区域的像素全部<strong>映射</strong>到该区域中的一固定像素，使得 GPU 在该区域进行纹理采样时，全部取得相同的颜色。</p>
+<p>这个过程分成三个步骤：1) 纹理分区；2) 坐标映射；3) 色彩采样。举个🌰，如下图，我们将一个由 UV 坐标生成的颜色纹理分成四个区域，每个区域中的采样坐标均映射到该区域的左下角，如区域2中，A、B、C等其他坐标均映射到坐标 O 上，GPU 在处理属于区域 2 的像素时均采用原纹理在坐标 O 的颜色：</p>
+<p><img src="/images/webgl-mosaics-effect/texCoord_map.png" alt></p>
+<p>这样我们便可以得到如右图的新纹理。当纹理分区越多，采样密度越高，便可形成更多的马赛克小格子~具体实现如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Fragment Shader</span></span><br><span class="line">uniform sampler2D u_texture;</span><br><span class="line">uniform <span class="keyword">float</span> u_mosaicLevel;</span><br><span class="line">varying vec2 v_texCoord;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">  vec2 st = v_texCoord;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 变换纹理采样坐标，使每 (1 / scale) 范围均映射到各自同一个采样坐标</span></span><br><span class="line">  <span class="keyword">float</span> scale = max(<span class="number">1.</span>, (<span class="number">10.</span> - u_mosaicLevel) * <span class="number">5.</span>);</span><br><span class="line">  st = <span class="built_in">floor</span>(st * scale) / scale; </span><br><span class="line"></span><br><span class="line">  vec3 color = texture2D(u_texture, st).rgb; </span><br><span class="line">  gl_FragColor = vec4(color, <span class="number">1.</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在例子的片元着色器中，我们结合传入的 <code>u_mosaicLevel</code> 对纹理坐标 <code>v_texCoord</code> 进行了一定的变换，马赛克的 Level 越高，对原纹理的采样密度越低，形成的马赛克越大。同时，为减少纹理参数的影响，同时降低计算开销，我们直接将 <code>gl.TEXTURE_MIN_FILTER</code> 的值设为 <code>gl.NEAREST</code> 即可：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// in javascript render function</span></span><br><span class="line">gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);</span><br></pre></td></tr></table></figure>
+<p><img src="/images/webgl-mosaics-effect/glsl_demo.gif" alt></p>
+<h2 id="相关阅读"><a href="#相关阅读" class="headerlink" title="相关阅读"></a>相关阅读</h2><ul>
+<li><a href="https://webglfundamentals.org/webgl/lessons/webgl-3d-textures.html" target="_blank" rel="noopener">WebGL Textures</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/68894334" target="_blank" rel="noopener">WebGL 纹理详解</a></li>
+<li><a href="https://thebookofshaders.com/10/" target="_blank" rel="noopener">The Book of Shaders - Generative designs</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/EXT_shader_texture_lod" target="_blank" rel="noopener">MDN - EXT_shader_texture_lod</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/webgl/" rel="tag"># webgl</a>
+          
+            <a href="/tags/javascript/" rel="tag"># javascript</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/08/ieee-floating-point-number/" rel="next" title="从计组课到前端深坑：IEEE 754双精度浮点数的那些事">
+                <i class="fa fa-chevron-left"></i> 从计组课到前端深坑：IEEE 754双精度浮点数的那些事
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.jpeg" alt="Jacelyn Jin">
+            
+              <p class="site-author-name" itemprop="name">Jacelyn Jin</p>
+              <p class="site-description motion-element" itemprop="description">Nolite te Bastardes Carborundorum</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/jacelynfish" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/jacelynfish" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://www.knowsec.net/" title="r00t4dm" target="_blank">r00t4dm</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://lllapland.github.io/" title="lllapland" target="_blank">lllapland</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="https://umi.cat/" title="Umi" target="_blank">Umi</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#使用扩展-EXT-shader-texture-lod"><span class="nav-number">2.</span> <span class="nav-text">使用扩展 EXT_shader_texture_lod</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GLSL-Shader-实现"><span class="nav-number">3.</span> <span class="nav-text">GLSL Shader 实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关阅读"><span class="nav-number">4.</span> <span class="nav-text">相关阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jacelyn Jin</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      TeX: {equationNumbers: { autoNumber: "AMS" }}
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+      var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/mathjax@2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
