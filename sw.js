@@ -10,9 +10,9 @@ let fileList = {
     '/lib/velocity/velocity.ui.min.js?v=1.2.1'
   ]
 };
-const CACHE_NAME = 'jacelyn1995_0708_2';
+const CACHE_NAME = 'jacelyn1995_0715_1';
 
-const HOST_WHITELIST = ['cdnjs.cloudflare.com', 'resource.jacelyn.fish'];
+const HOST_WHITELIST = ['cdnjs.cloudflare.com', 'jacelynfish.cn'];
 const DIRECT_LIST = ['jacelynfish.disqus.com', 'cdn.viglink.com', 'cdn.jsdelivr.net'];
 
 let STORE_NAME = 'bg_sync';
